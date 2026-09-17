@@ -1,0 +1,142 @@
+name: 'Release Cross-Platform Binaries'
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            target: 'aarch64-apple-darwin'
+            arch: 'Apple Silicon'
+          - platform: 'macos-latest'
+            target: 'x86_64-apple-darwin'
+            arch: 'Intel'
+          - platform: 'ubuntu-22.04'
+            target: 'x86_64-unknown-linux-gnu'
+            arch: 'Linux'
+          - platform: 'windows-latest'
+            target: 'x86_64-pc-windows-msvc'
+            arch: 'Windows'
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.1-dev libsoup-3.0-dev zstd
+
+      - name: Install Frontend dependencies
+        run: bun install
+
+      - name: Build Frontend
+        run: bun run build
+
+      - name: Build Tauri Desktop Application
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Synapse MCQ Studio ${{ github.ref_name }}'
+          releaseBody: |
+            ## Synapse MCQ Studio Binary Release
+
+            Ultra-Low-RAM Desktop Platform for AI-Powered PDF MCQ Testing & Learning.
+
+            ### Included Binaries:
+            - **Windows**: `.exe` / `.msi` installers
+            - **macOS**: `.dmg` (Universal / Apple Silicon & Intel)
+            - **Arch Linux**: `.pkg.tar.zst` native pacman package
+            - **Linux**: `.AppImage` and `.deb`
+          releaseDraft: false
+          prerelease: false
+          args: --target ${{ matrix.target }}
+
+      # Build native Arch Linux .pkg.tar.zst package
+      - name: Package Arch Linux .pkg.tar.zst
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          PKG_DIR=arch-pkg
+          mkdir -p $PKG_DIR/usr/bin
+          mkdir -p $PKG_DIR/usr/share/applications
+          mkdir -p $PKG_DIR/usr/share/icons/hicolor/128x128/apps
+          
+          # Find compiled Linux binary
+          find src-tauri/target -name "app" -type f -perm /111 -exec cp {} $PKG_DIR/usr/bin/synapse-mcq \; || true
+          
+          # Create Desktop entry
+          cat << 'EOF' > $PKG_DIR/usr/share/applications/synapse-mcq.desktop
+          [Desktop Entry]
+          Name=Synapse MCQ Studio
+          Comment=Ultra-Low-RAM Desktop Platform for AI-Powered PDF MCQ Testing & Learning
+          Exec=synapse-mcq
+          Icon=synapse-mcq
+          Terminal=false
+          Type=Application
+          Categories=Education;Development;
+          EOF
+          
+          # Copy desktop icon
+          cp src-tauri/icons/128x128.png $PKG_DIR/usr/share/icons/hicolor/128x128/apps/synapse-mcq.png
+          
+          # Compute size in bytes
+          INST_SIZE=$(du -sb $PKG_DIR | cut -f1)
+          
+          # Create Arch Linux .PKGINFO metadata
+          cat << EOF > $PKG_DIR/.PKGINFO
+          pkgname = synapse-mcq-desktop
+          pkgbase = synapse-mcq-desktop
+          pkgver = 0.1.0-1
+          pkgdesc = Ultra-Low-RAM Desktop Platform for AI-Powered PDF MCQ Testing & Learning
+          url = https://github.com/manuja-me/synapse-mcq-desktop
+          builddate = $(date +%s)
+          packager = GitHub Actions CI
+          size = $INST_SIZE
+          arch = x86_64
+          license = MIT
+          depend = webkit2gtk-4.1
+          depend = gtk3
+          depend = cairo
+          depend = glib2
+          depend = openssl
+          EOF
+          
+          cd $PKG_DIR
+          tar --zstd -cf ../synapse-mcq-desktop-0.1.0-1-x86_64.pkg.tar.zst .PKGINFO usr
+          cd ..
+          
+          # Upload Arch Linux package to GitHub Release
+          gh release upload ${{ github.ref_name }} synapse-mcq-desktop-0.1.0-1-x86_64.pkg.tar.zst --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
