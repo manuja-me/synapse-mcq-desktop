@@ -1,0 +1,25 @@
+# Maintainer: manuja-me <https://github.com/manuja-me>
+pkgname=synapse-mcq-desktop
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Ultra-Low-RAM Desktop Platform for AI-Powered PDF MCQ Testing & Learning"
+arch=('x86_64')
+url="https://github.com/manuja-me/synapse-mcq-desktop"
+license=('MIT')
+depends=('webkit2gtk-4.1' 'gtk3' 'cairo' 'glib2' 'openssl')
+makedepends=('rust' 'cargo' 'bun' 'git')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "$srcdir/$pkgname-$pkgver"
+    bun install
+    bun run build
+    cd src-tauri
+    cargo build --release --locked
+}
+
+package() {
+    cd "$srcdir/$pkgname-$pkgver"
+    install -Dm755 "src-tauri/target/release/app" "$pkgdir/usr/bin/synapse-mcq"
+}
