@@ -31,19 +31,19 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
       {/* Question Header & Stem */}
-      <div className="glass-panel rounded-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+      <div className="bg-[#121215] border border-[#27272A] p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-[#27272A] pb-3">
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-neon-cyan/15 text-neon-cyan text-xs font-mono font-bold">
+            <span className="px-2.5 py-1 bg-[#18181B] border border-[#27272A] text-[#10B981] text-xs font-mono font-bold">
               QUESTION {questionNumber} OF {totalQuestions}
             </span>
             {question.topic && (
-              <span className="px-2.5 py-0.5 rounded-full bg-white/5 text-slate-400 text-xs font-medium">
+              <span className="px-2 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400 text-xs font-mono">
                 {question.topic}
               </span>
             )}
             {question.difficulty && (
-              <span className="text-[10px] font-mono uppercase text-slate-500">
+              <span className="text-[10px] font-mono uppercase text-zinc-500">
                 • {question.difficulty}
               </span>
             )}
@@ -52,19 +52,19 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           {/* Flag for Review button */}
           <button
             onClick={onToggleFlag}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-mono transition-colors ${
               isFlagged
-                ? 'bg-neon-amber/20 text-neon-amber border border-neon-amber/40 shadow-glow-amber'
-                : 'bg-white/5 text-slate-400 hover:text-slate-200 border border-white/5'
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50'
+                : 'bg-[#18181B] text-zinc-400 hover:text-zinc-200 border border-[#27272A]'
             }`}
           >
-            <Flag className={`w-3.5 h-3.5 ${isFlagged ? 'fill-neon-amber' : ''}`} />
-            <span>{isFlagged ? 'Flagged' : 'Flag for Review'}</span>
+            <Flag className={`w-3.5 h-3.5 ${isFlagged ? 'fill-amber-400' : ''}`} />
+            <span>{isFlagged ? 'FLAGGED' : 'FLAG'}</span>
           </button>
         </div>
 
         {/* Question Stem Text */}
-        <div className="text-base sm:text-lg font-medium text-slate-100 leading-relaxed">
+        <div className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
           <MathText text={question.question} />
         </div>
       </div>
@@ -78,28 +78,28 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
           // Styling logic for Practice vs Exam mode
           let cardStyle =
-            'bg-obsidian-900/70 border border-white/10 hover:border-white/20 text-slate-300';
+            'bg-[#121215] border border-[#27272A] hover:border-[#3F3F46] text-zinc-300';
           let letterBadgeStyle =
-            'bg-obsidian-800 text-slate-400 border border-white/10';
+            'bg-[#18181B] text-zinc-400 border border-[#27272A]';
 
           if (mode === 'practice' && isAnswered) {
             if (isCorrectAnswer) {
               cardStyle =
-                'bg-neon-emerald/15 border-neon-emerald/70 text-slate-100 shadow-glow-emerald';
+                'bg-[#10B981]/10 border-[#10B981] text-zinc-100';
               letterBadgeStyle =
-                'bg-neon-emerald text-obsidian-950 font-bold';
+                'bg-[#10B981] text-[#09090B] font-bold';
             } else if (isSelected && !isCorrectAnswer) {
               cardStyle =
-                'bg-neon-rose/15 border-neon-rose/70 text-slate-100 shadow-glow-rose';
-              letterBadgeStyle = 'bg-neon-rose text-white font-bold';
+                'bg-red-500/10 border-red-500 text-zinc-100';
+              letterBadgeStyle = 'bg-red-500 text-white font-bold';
             } else {
-              cardStyle = 'opacity-50 border-white/5 text-slate-500';
+              cardStyle = 'opacity-40 border-[#27272A] text-zinc-500';
             }
           } else if (isSelected) {
             // Exam Mode selected
             cardStyle =
-              'bg-neon-cyan/15 border-neon-cyan/70 text-slate-100 shadow-glow-cyan';
-            letterBadgeStyle = 'bg-neon-cyan text-obsidian-950 font-bold';
+              'bg-[#10B981]/15 border-[#10B981] text-zinc-100';
+            letterBadgeStyle = 'bg-[#10B981] text-[#09090B] font-bold';
           }
 
           return (
@@ -107,11 +107,11 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               key={optIndex}
               onClick={() => onSelectOption(optIndex)}
               disabled={mode === 'practice' && isAnswered}
-              className={`w-full text-left p-4 rounded-xl flex items-start gap-4 transition-all duration-150 ${cardStyle} cursor-pointer group`}
+              className={`w-full text-left p-4 flex items-start gap-4 transition-colors ${cardStyle} cursor-pointer group`}
             >
               {/* Option Letter Key */}
               <div
-                className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-mono flex-shrink-0 transition-transform group-hover:scale-105 ${letterBadgeStyle}`}
+                className={`w-7 h-7 flex items-center justify-center text-xs font-mono flex-shrink-0 ${letterBadgeStyle}`}
               >
                 {letter}
               </div>
@@ -125,9 +125,9 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               {mode === 'practice' && isAnswered && (
                 <div className="flex-shrink-0 pt-0.5">
                   {isCorrectAnswer ? (
-                    <CheckCircle2 className="w-5 h-5 text-neon-emerald" />
+                    <CheckCircle2 className="w-5 h-5 text-[#10B981]" />
                   ) : isSelected ? (
-                    <XCircle className="w-5 h-5 text-neon-rose" />
+                    <XCircle className="w-5 h-5 text-red-500" />
                   ) : null}
                 </div>
               )}
@@ -138,18 +138,18 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
       {/* Practice Mode: Animated Didactic Explanation Breakdown */}
       {mode === 'practice' && isAnswered && (
-        <div className="glass-panel-glow rounded-2xl p-5 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <div className="flex items-center gap-2 text-neon-cyan border-b border-white/[0.08] pb-2.5">
-            <Lightbulb className="w-5 h-5 text-neon-amber" />
-            <span className="text-sm font-bold tracking-wide font-mono uppercase">
+        <div className="bg-[#121215] border border-[#10B981] p-5 space-y-4 animate-in fade-in duration-200">
+          <div className="flex items-center gap-2 text-[#10B981] border-b border-[#27272A] pb-2.5">
+            <Lightbulb className="w-5 h-5 text-amber-400" />
+            <span className="text-xs font-bold tracking-wide font-mono uppercase">
               Didactic Rationale & Distractor Analysis
             </span>
           </div>
 
           {/* Primary Explanation */}
           {question.explanation && (
-            <div className="p-3.5 rounded-xl bg-obsidian-950/80 border border-white/[0.06] text-xs text-slate-200 leading-relaxed">
-              <div className="font-semibold text-neon-emerald mb-1 flex items-center gap-1 font-mono text-[11px] uppercase">
+            <div className="p-3.5 bg-[#09090B] border border-[#27272A] text-xs text-zinc-200 leading-relaxed">
+              <div className="font-semibold text-[#10B981] mb-1 flex items-center gap-1 font-mono text-[11px] uppercase">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Why Option {optionLetters[question.correct_answer]} is Correct:</span>
               </div>
@@ -161,7 +161,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           {question.distractor_explanations &&
             question.distractor_explanations.length > 0 && (
               <div className="space-y-2 pt-1">
-                <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
                   Distractor Breakdown:
                 </div>
                 <div className="space-y-1.5">
@@ -170,13 +170,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                     return (
                       <div
                         key={i}
-                        className={`p-2.5 rounded-xl text-xs flex items-start gap-2 ${
+                        className={`p-2.5 text-xs flex items-start gap-2 ${
                           isRight
-                            ? 'bg-neon-emerald/[0.06] border border-neon-emerald/20 text-slate-300'
-                            : 'bg-white/[0.02] border border-white/[0.04] text-slate-400'
+                            ? 'bg-[#10B981]/10 border border-[#10B981]/30 text-zinc-200'
+                            : 'bg-[#18181B] border border-[#27272A] text-zinc-400'
                         }`}
                       >
-                        <span className="font-mono font-bold text-[11px] px-1.5 py-0.5 rounded bg-white/5 flex-shrink-0">
+                        <span className="font-mono font-bold text-[10px] px-1.5 py-0.5 bg-[#09090B] border border-[#27272A] flex-shrink-0">
                           Option {optionLetters[i]}
                         </span>
                         <div className="flex-1 leading-relaxed">

@@ -3,83 +3,96 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    background-color: #07080D;
-    color: #F1F5F9;
-    font-family: 'Inter', system-ui, sans-serif;
+  *, *::before, *::after {
+    border-radius: 0 !important;
   }
 
-  /* Custom subtle scrollbar */
+  body {
+    background-color: #09090B;
+    color: #FAFAFA;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Sharp pointed minimalist scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: rgba(11, 13, 20, 0.6);
+    background: #09090B;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: 9999px;
+    background: #27272A;
+    border-radius: 0px !important;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 240, 255, 0.4);
+    background: #10B981;
   }
 }
 
 @layer components {
+  .minimal-panel {
+    background: #121215;
+    border: 1px solid #27272A;
+  }
+
+  .minimal-card {
+    background: #121215;
+    border: 1px solid #27272A;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .minimal-card:hover {
+    background: #18181B;
+    border-color: #3F3F46;
+  }
+
+  /* Clean minimal compatibility classes */
   .glass-panel {
-    background: rgba(15, 18, 28, 0.65);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: #121215;
+    border: 1px solid #27272A;
   }
 
   .glass-panel-glow {
-    background: rgba(15, 18, 28, 0.8);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 240, 255, 0.25);
-    box-shadow: 0 0 25px -5px rgba(0, 240, 255, 0.15);
+    background: #121215;
+    border: 1px solid #10B981;
   }
 
   .glass-card {
-    background: rgba(17, 21, 34, 0.55);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    background: #121215;
+    border: 1px solid #27272A;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .glass-card:hover {
-    background: rgba(23, 27, 42, 0.75);
-    border-color: rgba(0, 240, 255, 0.35);
-    transform: translateY(-2px);
+    background: #18181B;
+    border-color: #10B981;
   }
 
   .glass-button-cyan {
-    background: linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(0, 240, 255, 0.05) 100%);
-    border: 1px solid rgba(0, 240, 255, 0.4);
-    color: #00F0FF;
-    transition: all 0.2s ease;
+    background: #10B981;
+    border: 1px solid #10B981;
+    color: #09090B;
+    font-weight: 600;
+    transition: all 0.15s ease;
   }
 
   .glass-button-cyan:hover {
-    background: linear-gradient(135deg, rgba(0, 240, 255, 0.25) 0%, rgba(0, 240, 255, 0.12) 100%);
-    border-color: #00F0FF;
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.35);
+    background: #059669;
+    border-color: #059669;
   }
 
   .glass-button-violet {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.18) 0%, rgba(139, 92, 246, 0.06) 100%);
-    border: 1px solid rgba(139, 92, 246, 0.4);
-    color: #C4B5FD;
-    transition: all 0.2s ease;
+    background: #18181B;
+    border: 1px solid #27272A;
+    color: #FAFAFA;
+    font-weight: 600;
+    transition: all 0.15s ease;
   }
 
   .glass-button-violet:hover {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(139, 92, 246, 0.15) 100%);
-    border-color: #8B5CF6;
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.35);
+    background: #27272A;
+    border-color: #3F3F46;
   }
 }
 

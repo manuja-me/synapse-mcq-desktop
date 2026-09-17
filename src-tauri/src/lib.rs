@@ -89,6 +89,30 @@ fn trim_memory() -> bool {
 }
 
 #[tauri::command]
+fn app_minimize(window: tauri::Window) {
+    let _ = window.minimize();
+}
+
+#[tauri::command]
+fn app_maximize(window: tauri::Window) {
+    if let Ok(is_max) = window.is_maximized() {
+        if is_max {
+            let _ = window.unmaximize();
+        } else {
+            let _ = window.maximize();
+        }
+    } else {
+        let _ = window.maximize();
+    }
+}
+
+#[tauri::command]
+fn app_close(app: tauri::AppHandle, window: tauri::Window) {
+    let _ = window.close();
+    app.exit(0);
+}
+
+#[tauri::command]
 fn parse_and_validate_deck(raw_json: String) -> ValidationResponse {
     let trimmed = raw_json.trim();
     if trimmed.is_empty() {
@@ -100,12 +124,10 @@ fn parse_and_validate_deck(raw_json: String) -> ValidationResponse {
         };
     }
 
-    // Try parsing as a full deck object first, then as a direct array of questions
     let parsed_deck: Result<McqDeck, _> = serde_json::from_str(trimmed);
     let deck = match parsed_deck {
         Ok(d) => d,
         Err(deck_err) => {
-            // Try parsing as array of questions
             match serde_json::from_str::<Vec<McqQuestion>>(trimmed) {
                 Ok(questions) => McqDeck {
                     title: "Imported Question Set".to_string(),
@@ -142,7 +164,6 @@ fn parse_and_validate_deck(raw_json: String) -> ValidationResponse {
         };
     }
 
-    // Validate individual questions
     let mut topics_set = HashSet::new();
     let mut difficulty_counts = HashMap::new();
 
@@ -234,6 +255,9 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             trim_memory,
+            app_minimize,
+            app_maximize,
+            app_close,
             parse_and_validate_deck
         ])
         .run(tauri::generate_context!())

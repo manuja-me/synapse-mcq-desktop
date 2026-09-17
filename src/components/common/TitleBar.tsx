@@ -1,6 +1,6 @@
 import React from 'react';
 import { Minus, Square, X, Cpu, Sparkles, Command } from 'lucide-react';
-import { minimizeWindow, toggleMaximizeWindow, closeWindow, isTauriEnvironment } from '../../utils/tauriBridge';
+import { minimizeWindow, toggleMaximizeWindow, closeWindow } from '../../utils/tauriBridge';
 
 interface TitleBarProps {
   activeDeckTitle?: string;
@@ -13,86 +13,103 @@ export const TitleBar: React.FC<TitleBarProps> = ({
   onOpenCommandPalette,
   onTrimMemory,
 }) => {
-  const isTauri = isTauriEnvironment();
-
   return (
-    <header
-      data-tauri-drag-region
-      className="h-11 w-full bg-obsidian-950/85 backdrop-blur-md border-b border-white/[0.06] flex items-center justify-between px-3 select-none z-50 fixed top-0 left-0 right-0"
-    >
-      {/* Left: App Brand & Window Controls */}
-      <div className="flex items-center gap-3">
-        {/* Window controls (Only in Tauri desktop mode) */}
-        {isTauri && (
-          <div className="flex items-center gap-1.5 mr-2">
-            <button
-              onClick={closeWindow}
-              title="Close"
-              className="w-3 h-3 rounded-full bg-neon-rose/80 hover:bg-neon-rose hover:shadow-glow-rose transition-all flex items-center justify-center group"
-            >
-              <X className="w-2 h-2 text-obsidian-950 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-            <button
-              onClick={minimizeWindow}
-              title="Minimize"
-              className="w-3 h-3 rounded-full bg-neon-amber/80 hover:bg-neon-amber transition-all flex items-center justify-center group"
-            >
-              <Minus className="w-2 h-2 text-obsidian-950 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-            <button
-              onClick={toggleMaximizeWindow}
-              title="Maximize"
-              className="w-3 h-3 rounded-full bg-neon-emerald/80 hover:bg-neon-emerald hover:shadow-glow-emerald transition-all flex items-center justify-center group"
-            >
-              <Square className="w-1.5 h-1.5 text-obsidian-950 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-          </div>
-        )}
-
+    <header className="h-10 w-full bg-[#09090B] border-b border-[#27272A] flex items-center justify-between select-none z-50 fixed top-0 left-0 right-0">
+      {/* Left: App Brand & Drag region */}
+      <div data-tauri-drag-region className="flex items-center gap-3 px-3 h-full cursor-default">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-neon-cyan to-neon-violet p-0.5 flex items-center justify-center shadow-glow-cyan">
-            <div className="w-full h-full bg-obsidian-950 rounded-[6px] flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-neon-cyan" />
-            </div>
+          <div className="w-5 h-5 bg-[#10B981] flex items-center justify-center">
+            <Sparkles className="w-3 h-3 text-[#09090B]" />
           </div>
-          <span className="text-xs font-bold tracking-widest bg-gradient-to-r from-white via-slate-200 to-neon-cyan bg-clip-text text-transparent">
-            SYNAPSE <span className="text-[10px] text-neon-cyan font-mono font-normal">MCQ</span>
+          <span className="text-xs font-bold tracking-wider text-white font-mono">
+            SYNAPSE <span className="text-[10px] text-[#10B981]">MCQ</span>
           </span>
         </div>
 
         {/* Active deck breadcrumb */}
         {activeDeckTitle && (
-          <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400 pl-3 border-l border-white/[0.08]">
-            <span className="text-slate-500">Active:</span>
-            <span className="text-slate-200 max-w-[200px] truncate font-medium">{activeDeckTitle}</span>
+          <div className="hidden sm:flex items-center gap-2 text-xs text-zinc-400 pl-3 border-l border-[#27272A]">
+            <span className="text-zinc-500 font-mono text-[10px]">ACTIVE:</span>
+            <span className="text-zinc-200 max-w-[200px] truncate font-medium">{activeDeckTitle}</span>
           </div>
         )}
       </div>
 
-      {/* Center: Command Palette Trigger */}
-      <button
-        onClick={onOpenCommandPalette}
-        className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-obsidian-900 border border-white/[0.08] hover:border-neon-cyan/40 text-slate-400 hover:text-slate-200 text-xs transition-all shadow-inner group"
-      >
-        <Command className="w-3 h-3 text-neon-cyan group-hover:scale-110 transition-transform" />
-        <span>Quick Navigation</span>
-        <kbd className="px-1.5 py-0.5 rounded bg-obsidian-800 border border-white/10 text-[10px] font-mono text-slate-400">
-          Ctrl+K
-        </kbd>
-      </button>
-
-      {/* Right: RAM Optimization Badge & Actions */}
-      <div className="flex items-center gap-2">
+      {/* Center: Window Drag Area & Quick Nav Trigger */}
+      <div data-tauri-drag-region className="flex-1 h-full flex items-center justify-center px-4 cursor-default">
         <button
-          onClick={onTrimMemory}
+          data-tauri-drag-region="false"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenCommandPalette();
+          }}
+          className="hidden md:flex items-center gap-2 px-3 py-1 bg-[#121215] border border-[#27272A] hover:border-[#3F3F46] text-zinc-400 hover:text-zinc-200 text-xs transition-colors"
+        >
+          <Command className="w-3 h-3 text-[#10B981]" />
+          <span>Quick Navigation</span>
+          <kbd className="px-1.5 py-0.5 bg-[#18181B] border border-[#27272A] text-[10px] font-mono text-zinc-400">
+            Ctrl+K
+          </kbd>
+        </button>
+      </div>
+
+      {/* Right: RAM Trim & Window Controls */}
+      <div data-tauri-drag-region="false" className="flex items-center h-full">
+        <button
+          data-tauri-drag-region="false"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTrimMemory();
+          }}
           title="Active RAM Memory Flush (Win32 Working-Set Trim)"
-          className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan text-[11px] font-mono hover:bg-neon-cyan/20 transition-all hover:shadow-glow-cyan"
+          className="flex items-center gap-1.5 px-2.5 py-1 mr-2 bg-[#121215] border border-[#27272A] hover:border-[#10B981]/50 text-[#10B981] text-[10px] font-mono transition-colors"
         >
           <Cpu className="w-3 h-3 animate-pulse" />
-          <span className="hidden sm:inline">LOW-RAM CORE</span>
-          <span className="text-[9px] px-1 bg-neon-cyan/20 rounded font-semibold">TRIM</span>
+          <span className="hidden sm:inline">RAM TRIM</span>
         </button>
+
+        {/* Window Control Buttons */}
+        <div data-tauri-drag-region="false" className="flex items-center h-full border-l border-[#27272A]">
+          <button
+            data-tauri-drag-region="false"
+            onClick={(e) => {
+              e.stopPropagation();
+              minimizeWindow();
+            }}
+            title="Minimize"
+            aria-label="Minimize"
+            className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-[#27272A] transition-colors"
+          >
+            <Minus className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            data-tauri-drag-region="false"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMaximizeWindow();
+            }}
+            title="Maximize"
+            aria-label="Maximize"
+            className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-[#27272A] transition-colors"
+          >
+            <Square className="w-3 h-3" />
+          </button>
+
+          <button
+            data-tauri-drag-region="false"
+            onClick={(e) => {
+              e.stopPropagation();
+              closeWindow();
+            }}
+            title="Close"
+            aria-label="Close"
+            className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#DC2626] transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </header>
   );

@@ -195,26 +195,26 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12">
       {/* Top HUD Controls Bar */}
-      <div className="glass-panel rounded-2xl p-4 flex items-center justify-between gap-4">
+      <div className="bg-[#121215] border border-[#27272A] p-4 flex items-center justify-between gap-4">
         {/* Left: Exit & Mode info */}
         <div className="flex items-center gap-3">
           <button
             onClick={onExitQuiz}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-slate-200 transition-colors"
+            className="p-2 bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-zinc-400 hover:text-zinc-200 transition-colors"
             title="Exit to Library"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <div className="text-xs font-bold text-slate-200 truncate max-w-xs sm:max-w-sm">
+            <div className="text-xs font-bold text-zinc-200 truncate max-w-xs sm:max-w-sm font-mono">
               {deck.title}
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+            <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-400">
               <span
-                className={`uppercase font-bold px-1.5 py-0.2 rounded ${
+                className={`uppercase font-bold px-1.5 py-0.5 ${
                   mode === 'exam'
-                    ? 'text-neon-violet bg-neon-violet/10'
-                    : 'text-neon-cyan bg-neon-cyan/10'
+                    ? 'text-zinc-300 bg-zinc-800'
+                    : 'text-[#10B981] bg-[#18181B] border border-[#27272A]'
                 }`}
               >
                 {mode} MODE
@@ -227,10 +227,10 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
 
         {/* Center: Exam Countdown Timer or Elapsed */}
         <div className="flex items-center gap-2 font-mono">
-          <Clock className={`w-4 h-4 ${timeRemaining < 120 && mode === 'exam' ? 'text-neon-rose animate-pulse' : 'text-neon-cyan'}`} />
+          <Clock className={`w-4 h-4 ${timeRemaining < 120 && mode === 'exam' ? 'text-red-500 animate-pulse' : 'text-[#10B981]'}`} />
           <span
             className={`text-sm font-bold ${
-              timeRemaining < 120 && mode === 'exam' ? 'text-neon-rose font-extrabold' : 'text-slate-200'
+              timeRemaining < 120 && mode === 'exam' ? 'text-red-500 font-extrabold' : 'text-zinc-200'
             }`}
           >
             {mode === 'exam' ? formatTimer(timeRemaining) : formatTimer(elapsedSeconds)}
@@ -241,19 +241,19 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowSubmitModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl glass-button-cyan text-xs font-semibold"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors"
           >
             <Send className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Finish & Submit</span>
-            <span className="sm:hidden">Submit</span>
+            <span className="hidden sm:inline">FINISH & SUBMIT</span>
+            <span className="sm:hidden">SUBMIT</span>
           </button>
         </div>
       </div>
 
       {/* Progress Line */}
-      <div className="w-full h-1 bg-obsidian-900 rounded-full overflow-hidden">
+      <div className="w-full h-1 bg-[#18181B] border-y border-[#27272A]">
         <div
-          className="h-full bg-gradient-to-r from-neon-cyan to-neon-violet transition-all duration-300"
+          className="h-full bg-[#10B981] transition-all duration-200"
           style={{ width: `${((currentIndex + 1) / deck.questions.length) * 100}%` }}
         />
       </div>
@@ -273,39 +273,39 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
           />
 
           {/* Navigation Controls Bar */}
-          <div className="glass-panel rounded-2xl p-4 flex items-center justify-between gap-4">
+          <div className="bg-[#121215] border border-[#27272A] p-4 flex items-center justify-between gap-4">
             <button
               onClick={handlePrev}
               disabled={currentIndex === 0}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-obsidian-900 hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-obsidian-900 text-xs font-semibold text-slate-300 border border-white/5 transition-all"
+              className="flex items-center gap-1.5 px-4 py-2 bg-[#18181B] hover:bg-[#27272A] disabled:opacity-40 disabled:hover:bg-[#18181B] text-xs font-semibold font-mono text-zinc-300 border border-[#27272A] transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Previous</span>
+              <span>PREVIOUS</span>
             </button>
 
             {/* Keyboard shortcut tips */}
-            <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono text-slate-500">
-              <span>Keys: <kbd className="px-1 py-0.5 rounded bg-white/5 text-slate-400">1-4</kbd> / <kbd className="px-1 py-0.5 rounded bg-white/5 text-slate-400">A-D</kbd></span>
+            <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono text-zinc-500">
+              <span>KEYS: <kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">1-4</kbd> / <kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">A-D</kbd></span>
               <span>•</span>
-              <span><kbd className="px-1 py-0.5 rounded bg-white/5 text-slate-400">Arrows</kbd> Navigate</span>
+              <span><kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">ARROWS</kbd> NAVIGATE</span>
               <span>•</span>
-              <span><kbd className="px-1 py-0.5 rounded bg-white/5 text-slate-400">F</kbd> Flag</span>
+              <span><kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">F</kbd> FLAG</span>
             </div>
 
             {currentIndex === deck.questions.length - 1 ? (
               <button
                 onClick={() => setShowSubmitModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl glass-button-cyan text-xs font-semibold"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors"
               >
-                <span>Submit Exam</span>
+                <span>SUBMIT EXAM</span>
                 <Send className="w-4 h-4" />
               </button>
             ) : (
               <button
                 onClick={handleNext}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl glass-button-cyan text-xs font-semibold"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors"
               >
-                <span>Next</span>
+                <span>NEXT</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             )}
@@ -326,17 +326,17 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
 
       {/* Submit Confirmation Modal */}
       {showSubmitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-obsidian-900 border border-white/10 rounded-2xl p-6 shadow-2xl space-y-4 text-slate-200">
-            <div className="flex items-center gap-3 text-neon-cyan">
-              <div className="p-2 rounded-xl bg-neon-cyan/10">
-                <AlertCircle className="w-6 h-6" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-md bg-[#121215] border border-[#27272A] p-6 shadow-2xl space-y-4 text-zinc-200">
+            <div className="flex items-center gap-3 text-[#10B981]">
+              <div className="p-2 bg-[#18181B] border border-[#27272A]">
+                <AlertCircle className="w-6 h-6 text-[#10B981]" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-100">
+                <h3 className="text-base font-bold text-zinc-100 font-mono">
                   Ready to Submit?
                 </h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-zinc-400">
                   {deck.questions.length - answeredCount > 0
                     ? `You have ${deck.questions.length - answeredCount} unanswered question(s).`
                     : 'All questions have been answered.'}
@@ -344,31 +344,31 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-obsidian-950 border border-white/5 space-y-1 text-xs font-mono">
+            <div className="p-3 bg-[#09090B] border border-[#27272A] space-y-1 text-xs font-mono">
               <div className="flex justify-between">
-                <span className="text-slate-400">Total Questions:</span>
-                <span className="text-slate-200">{deck.questions.length}</span>
+                <span className="text-zinc-500">Total Questions:</span>
+                <span className="text-zinc-200">{deck.questions.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Answered:</span>
-                <span className="text-neon-cyan">{answeredCount}</span>
+                <span className="text-zinc-500">Answered:</span>
+                <span className="text-[#10B981] font-bold">{answeredCount}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Unanswered:</span>
-                <span className="text-neon-rose">{deck.questions.length - answeredCount}</span>
+                <span className="text-zinc-500">Unanswered:</span>
+                <span className="text-red-400 font-bold">{deck.questions.length - answeredCount}</span>
               </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowSubmitModal(false)}
-                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 transition-colors"
+                className="px-4 py-2 bg-[#18181B] hover:bg-[#27272A] text-xs font-semibold font-mono text-zinc-300 border border-[#27272A] transition-colors"
               >
                 Keep Reviewing
               </button>
               <button
                 onClick={handleSubmitQuiz}
-                className="px-4 py-2 rounded-xl glass-button-cyan text-xs font-semibold"
+                className="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors"
               >
                 Yes, Submit Now
               </button>

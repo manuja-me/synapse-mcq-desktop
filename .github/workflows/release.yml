@@ -61,6 +61,8 @@ jobs:
       - name: Package Arch Linux .pkg.tar.zst
         if: matrix.os_name == 'linux'
         run: |
+          RAW_TAG=${GITHUB_REF#refs/tags/v}
+          PKG_VER=${RAW_TAG:-0.1.2}
           PKG_DIR=arch-pkg
           mkdir -p $PKG_DIR/usr/bin
           mkdir -p $PKG_DIR/usr/share/applications
@@ -90,7 +92,7 @@ jobs:
           cat << EOF > $PKG_DIR/.PKGINFO
           pkgname = synapse-mcq-desktop
           pkgbase = synapse-mcq-desktop
-          pkgver = 0.1.0-1
+          pkgver = ${PKG_VER}-1
           pkgdesc = Ultra-Low-RAM Desktop Platform for AI-Powered PDF MCQ Testing & Learning
           url = https://github.com/manuja-me/synapse-mcq-desktop
           builddate = $(date +%s)
@@ -106,9 +108,9 @@ jobs:
           EOF
           
           cd $PKG_DIR
-          tar --zstd -cf ../synapse-mcq-desktop-0.1.0-1-x86_64.pkg.tar.zst .PKGINFO usr
+          tar --zstd -cf ../synapse-mcq-desktop-${PKG_VER}-1-x86_64.pkg.tar.zst .PKGINFO usr
           cd ..
-          ls -lh synapse-mcq-desktop-0.1.0-1-x86_64.pkg.tar.zst
+          ls -lh synapse-mcq-desktop-*.pkg.tar.zst
 
       - name: Upload Artifacts to Release
         id: upload_release
@@ -123,6 +125,7 @@ jobs:
             src-tauri/target/release/bundle/dmg/*.dmg
             src-tauri/target/release/bundle/msi/*.msi
             src-tauri/target/release/bundle/nsis/*.exe
+            release-assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

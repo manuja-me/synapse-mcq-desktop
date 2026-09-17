@@ -101,30 +101,30 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Top Banner & Score Gauge */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+      <div className="bg-[#121215] border border-[#27272A] p-6 sm:p-8 relative">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
           <div className="space-y-2 text-center sm:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neon-cyan/10 border border-neon-cyan/25 text-neon-cyan text-xs font-mono">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-[#18181B] border border-[#27272A] text-[#10B981] text-xs font-mono">
               <Award className="w-3.5 h-3.5" />
               <span>COGNITIVE DIAGNOSTIC REPORT</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-100">
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 font-mono">
               {deck.title}
             </h1>
-            <p className="text-xs text-slate-400 font-mono">
-              Completed in {Math.floor(elapsedSeconds / 60)}m {elapsedSeconds % 60}s • Mode: {mode.toUpperCase()}
+            <p className="text-xs text-zinc-400 font-mono">
+              Completed in {Math.floor(elapsedSeconds / 60)}m {elapsedSeconds % 60}s • MODE: {mode.toUpperCase()}
             </p>
           </div>
 
-          {/* Large Score Indicator */}
+          {/* Large Score Indicator (Square Pointed) */}
           <div className="flex flex-col items-center">
             <div
-              className={`w-28 h-28 rounded-full border-4 flex flex-col items-center justify-center shadow-2xl ${
+              className={`w-28 h-28 border-2 flex flex-col items-center justify-center ${
                 scorePercentage >= 80
-                  ? 'border-neon-emerald bg-neon-emerald/10 shadow-glow-emerald text-neon-emerald'
+                  ? 'border-[#10B981] bg-[#10B981]/10 text-[#10B981]'
                   : scorePercentage >= 60
-                  ? 'border-neon-cyan bg-neon-cyan/10 shadow-glow-cyan text-neon-cyan'
-                  : 'border-neon-amber bg-neon-amber/10 shadow-glow-amber text-neon-amber'
+                  ? 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
+                  : 'border-amber-500 bg-amber-500/10 text-amber-400'
               }`}
             >
               <span className="text-3xl font-extrabold font-mono">{scorePercentage}%</span>
@@ -136,31 +136,31 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
         </div>
 
         {/* Quick Metrics Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/[0.08]">
-          <div className="p-3 rounded-2xl bg-obsidian-950/70 border border-white/[0.05] text-center">
-            <div className="text-[10px] font-mono text-slate-500 uppercase">Correct</div>
-            <div className="text-xl font-bold text-neon-emerald font-mono mt-0.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-[#27272A]">
+          <div className="p-3 bg-[#18181B] border border-[#27272A] text-center">
+            <div className="text-[10px] font-mono text-zinc-500 uppercase">Correct</div>
+            <div className="text-xl font-bold text-[#10B981] font-mono mt-0.5">
               {correctCount} / {totalQuestions}
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-obsidian-950/70 border border-white/[0.05] text-center">
-            <div className="text-[10px] font-mono text-slate-500 uppercase">Missed</div>
-            <div className="text-xl font-bold text-neon-rose font-mono mt-0.5">
+          <div className="p-3 bg-[#18181B] border border-[#27272A] text-center">
+            <div className="text-[10px] font-mono text-zinc-500 uppercase">Missed</div>
+            <div className="text-xl font-bold text-red-400 font-mono mt-0.5">
               {missedIndices.length}
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-obsidian-950/70 border border-white/[0.05] text-center">
-            <div className="text-[10px] font-mono text-slate-500 uppercase">Avg Time / Q</div>
-            <div className="text-xl font-bold text-neon-cyan font-mono mt-0.5">
+          <div className="p-3 bg-[#18181B] border border-[#27272A] text-center">
+            <div className="text-[10px] font-mono text-zinc-500 uppercase">Avg Time / Q</div>
+            <div className="text-xl font-bold text-zinc-200 font-mono mt-0.5">
               {avgSeconds}s
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-obsidian-950/70 border border-white/[0.05] text-center">
-            <div className="text-[10px] font-mono text-slate-500 uppercase">Flagged</div>
-            <div className="text-xl font-bold text-neon-amber font-mono mt-0.5">
+          <div className="p-3 bg-[#18181B] border border-[#27272A] text-center">
+            <div className="text-[10px] font-mono text-zinc-500 uppercase">Flagged</div>
+            <div className="text-xl font-bold text-amber-400 font-mono mt-0.5">
               {flaggedIndices.length}
             </div>
           </div>
@@ -171,36 +171,36 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
       <div className="flex flex-wrap items-center gap-3">
         <button
           onClick={onBackToLibrary}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-obsidian-900 hover:bg-white/5 border border-white/10 text-xs font-semibold text-slate-300 transition-all"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-xs font-semibold font-mono text-zinc-300 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Deck Library</span>
+          <span>BACK TO LIBRARY</span>
         </button>
 
         <button
           onClick={() => onRetakeQuiz(mode)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl glass-button-cyan text-xs font-semibold"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors"
         >
           <RotateCcw className="w-4 h-4" />
-          <span>Retake Full Test ({mode})</span>
+          <span>RETAKE TEST ({mode.toUpperCase()})</span>
         </button>
 
         {missedIndices.length > 0 && (
           <button
             onClick={() => onRetakeMissedOnly(missedIndices)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl glass-button-violet text-xs font-semibold"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-zinc-200 text-xs font-semibold font-mono transition-colors"
           >
-            <Layers className="w-4 h-4" />
-            <span>Drill {missedIndices.length} Missed Questions</span>
+            <Layers className="w-4 h-4 text-[#10B981]" />
+            <span>DRILL {missedIndices.length} MISSED QUESTIONS</span>
           </button>
         )}
       </div>
 
       {/* Topic Breakdown Card */}
       {Object.keys(topicStats).length > 0 && (
-        <div className="glass-panel rounded-2xl p-5 space-y-3">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-200 border-b border-white/[0.08] pb-2.5">
-            <BarChart3 className="w-4 h-4 text-neon-cyan" />
+        <div className="bg-[#121215] border border-[#27272A] p-5 space-y-3">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200 border-b border-[#27272A] pb-2.5 font-mono uppercase">
+            <BarChart3 className="w-4 h-4 text-[#10B981]" />
             <span>Mastery by Topic</span>
           </div>
 
@@ -210,15 +210,15 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
               return (
                 <div key={topic} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium text-slate-300">{topic}</span>
-                    <span className="font-mono text-slate-400">
+                    <span className="font-medium text-zinc-300 font-mono">{topic}</span>
+                    <span className="font-mono text-zinc-400">
                       {stat.correct}/{stat.total} ({pct}%)
                     </span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-obsidian-950 overflow-hidden border border-white/5">
+                  <div className="w-full h-1.5 bg-[#18181B] border border-[#27272A]">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        pct >= 80 ? 'bg-neon-emerald' : pct >= 50 ? 'bg-neon-cyan' : 'bg-neon-amber'
+                      className={`h-full transition-all duration-300 ${
+                        pct >= 80 ? 'bg-[#10B981]' : pct >= 50 ? 'bg-cyan-500' : 'bg-amber-500'
                       }`}
                       style={{ width: `${pct}%` }}
                     />
@@ -232,8 +232,8 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
 
       {/* Questions Review Section */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
-          <div className="text-sm font-bold font-mono tracking-wider text-slate-200 uppercase">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#27272A] pb-3">
+          <div className="text-xs font-bold font-mono tracking-wider text-zinc-200 uppercase">
             Question-by-Question Review ({displayedIndices.length})
           </div>
 
@@ -241,30 +241,30 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setFilterMode('all')}
-              className={`px-3 py-1 rounded-lg text-xs font-mono transition-all ${
+              className={`px-3 py-1 text-xs font-mono transition-colors ${
                 filterMode === 'all'
-                  ? 'bg-white/15 text-white font-bold'
-                  : 'bg-obsidian-900 text-slate-400 hover:text-slate-200'
+                  ? 'bg-zinc-200 text-zinc-900 font-bold'
+                  : 'bg-[#121215] text-zinc-400 hover:text-zinc-200 border border-[#27272A]'
               }`}
             >
               All ({totalQuestions})
             </button>
             <button
               onClick={() => setFilterMode('missed')}
-              className={`px-3 py-1 rounded-lg text-xs font-mono transition-all ${
+              className={`px-3 py-1 text-xs font-mono transition-colors ${
                 filterMode === 'missed'
-                  ? 'bg-neon-rose/25 text-neon-rose border border-neon-rose/40 font-bold'
-                  : 'bg-obsidian-900 text-slate-400 hover:text-slate-200'
+                  ? 'bg-red-500 text-white font-bold'
+                  : 'bg-[#121215] text-zinc-400 hover:text-zinc-200 border border-[#27272A]'
               }`}
             >
               Missed ({missedIndices.length})
             </button>
             <button
               onClick={() => setFilterMode('flagged')}
-              className={`px-3 py-1 rounded-lg text-xs font-mono transition-all ${
+              className={`px-3 py-1 text-xs font-mono transition-colors ${
                 filterMode === 'flagged'
-                  ? 'bg-neon-amber/25 text-neon-amber border border-neon-amber/40 font-bold'
-                  : 'bg-obsidian-900 text-slate-400 hover:text-slate-200'
+                  ? 'bg-amber-500 text-black font-bold'
+                  : 'bg-[#121215] text-zinc-400 hover:text-zinc-200 border border-[#27272A]'
               }`}
             >
               Flagged ({flaggedIndices.length})
@@ -283,21 +283,21 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
             return (
               <div
                 key={qIdx}
-                className="glass-card rounded-2xl p-4 space-y-3 transition-all cursor-pointer"
+                className="bg-[#121215] border border-[#27272A] hover:border-[#3F3F46] p-4 space-y-3 transition-colors cursor-pointer"
                 onClick={() => toggleExpand(qIdx)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2.5">
                     {isCorrect ? (
-                      <CheckCircle2 className="w-5 h-5 text-neon-emerald flex-shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-[#10B981] flex-shrink-0" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-neon-rose flex-shrink-0" />
+                      <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
                     )}
-                    <span className="text-xs font-mono font-bold text-slate-400">
+                    <span className="text-xs font-mono font-bold text-zinc-400">
                       Q{qIdx + 1}
                     </span>
                     {q.topic && (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-slate-400 font-mono">
+                      <span className="text-[10px] px-1.5 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400 font-mono">
                         {q.topic}
                       </span>
                     )}
@@ -305,25 +305,25 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
 
                   <div className="flex items-center gap-2">
                     {ans?.flaggedForReview && (
-                      <Flag className="w-3.5 h-3.5 text-neon-amber fill-neon-amber" />
+                      <Flag className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                     )}
                     {isExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-slate-400" />
+                      <ChevronUp className="w-4 h-4 text-zinc-400" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 text-slate-400" />
+                      <ChevronDown className="w-4 h-4 text-zinc-400" />
                     )}
                   </div>
                 </div>
 
                 {/* Question Stem */}
-                <div className="text-sm font-medium text-slate-200">
+                <div className="text-sm font-medium text-zinc-200">
                   <MathText text={q.question} />
                 </div>
 
                 {/* Expanded Details */}
                 {isExpanded && (
                   <div
-                    className="pt-3 border-t border-white/[0.06] space-y-3 animate-in fade-in duration-150"
+                    className="pt-3 border-t border-[#27272A] space-y-3 animate-in fade-in duration-150"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Options List */}
@@ -332,31 +332,31 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                         const isChosen = ans?.selectedOption === optIdx;
                         const isRight = optIdx === q.correct_answer;
 
-                        let optStyle = 'bg-obsidian-950/60 border-white/5 text-slate-400';
+                        let optStyle = 'bg-[#18181B] border border-[#27272A] text-zinc-400';
                         if (isRight) {
-                          optStyle = 'bg-neon-emerald/15 border-neon-emerald/50 text-slate-100 font-medium';
+                          optStyle = 'bg-[#10B981]/15 border border-[#10B981] text-zinc-100 font-medium';
                         } else if (isChosen && !isRight) {
-                          optStyle = 'bg-neon-rose/15 border-neon-rose/50 text-slate-200';
+                          optStyle = 'bg-red-500/15 border border-red-500 text-zinc-200';
                         }
 
                         return (
                           <div
                             key={optIdx}
-                            className={`p-2.5 rounded-xl border text-xs flex items-center justify-between ${optStyle}`}
+                            className={`p-2.5 text-xs flex items-center justify-between ${optStyle}`}
                           >
                             <div className="flex items-center gap-2">
-                              <span className="font-mono font-bold px-1.5 py-0.5 rounded bg-white/5">
+                              <span className="font-mono font-bold px-1.5 py-0.5 bg-[#09090B] border border-[#27272A]">
                                 {optionLetters[optIdx]}
                               </span>
                               <span><MathText text={opt} /></span>
                             </div>
                             {isRight && (
-                              <span className="text-[10px] font-mono text-neon-emerald font-bold">
+                              <span className="text-[10px] font-mono text-[#10B981] font-bold">
                                 Correct Answer
                               </span>
                             )}
                             {isChosen && !isRight && (
-                              <span className="text-[10px] font-mono text-neon-rose font-bold">
+                              <span className="text-[10px] font-mono text-red-400 font-bold">
                                 Your Choice
                               </span>
                             )}
@@ -367,8 +367,8 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
 
                     {/* Explanations */}
                     {q.explanation && (
-                      <div className="p-3 rounded-xl bg-obsidian-950 border border-white/[0.08] text-xs text-slate-300 leading-relaxed">
-                        <div className="font-semibold text-neon-cyan font-mono text-[11px] mb-1">
+                      <div className="p-3 bg-[#09090B] border border-[#27272A] text-xs text-zinc-300 leading-relaxed font-mono">
+                        <div className="font-semibold text-[#10B981] text-[11px] mb-1">
                           Rationale:
                         </div>
                         <MathText text={q.explanation} />

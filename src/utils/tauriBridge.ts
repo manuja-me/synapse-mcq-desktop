@@ -7,19 +7,88 @@ export interface RustValidationResponse {
   stats?: DeckStats;
 }
 
-// Safely detect if running inside Tauri
 export function isTauriEnvironment(): boolean {
-  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+  if (typeof window === 'undefined') return false;
+  return (
+    '__TAURI_INTERNALS__' in window ||
+    '__TAURI__' in window ||
+    window.location.hostname === 'tauri.localhost' ||
+    window.location.protocol === 'tauri:' ||
+    window.location.protocol === 'asset:'
+  );
 }
 
 export async function invokeTrimMemory(): Promise<boolean> {
-  if (!isTauriEnvironment()) return false;
   try {
     const { invoke } = await import('@tauri-apps/api/core');
     return await invoke<boolean>('trim_memory');
   } catch (err) {
-    console.debug('Memory trimming not supported in current environment:', err);
+    console.debug('Memory trimming call skipped:', err);
     return false;
+  }
+}
+
+export async function minimizeWindow(): Promise<void> {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('app_minimize');
+    return;
+  } catch (err) {
+    try {
+      const { getCurrentWindow } = await import('@tauri-apps/api/window');
+      await getCurrentWindow().minimize();
+      return;
+    } catch (err2) {
+      if (isTauriEnvironment()) {
+        console.error('Failed to minimize window:', err, err2);
+      }
+    }
+  }
+}
+
+export async function toggleMaximizeWindow(): Promise<void> {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('app_maximize');
+    return;
+  } catch (err) {
+    try {
+      const { getCurrentWindow } = await import('@tauri-apps/api/window');
+      await getCurrentWindow().toggleMaximize();
+      return;
+    } catch (err2) {
+      if (isTauriEnvironment()) {
+        console.error('Failed to toggle maximize window:', err, err2);
+      }
+    }
+  }
+}
+
+export async function closeWindow(): Promise<void> {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('app_close');
+    return;
+  } catch (err) {
+    try {
+      const { getCurrentWindow } = await import('@tauri-apps/api/window');
+      await getCurrentWindow().close();
+      return;
+    } catch (err2) {
+      if (isTauriEnvironment()) {
+        console.error('Failed to close window:', err, err2);
+      }
+    }
+  }
+}
+
+export async function startDragging(): Promise<void> {
+  if (!isTauriEnvironment()) return;
+  try {
+    const { getCurrentWindow } = await import('@tauri-apps/api/window');
+    await getCurrentWindow().startDragging();
+  } catch {
+    // Non-fatal
   }
 }
 
@@ -29,52 +98,10 @@ export async function validateWithRust(rawJson: string): Promise<RustValidationR
       const { invoke } = await import('@tauri-apps/api/core');
       return await invoke<RustValidationResponse>('parse_and_validate_deck', { rawJson });
     } catch (err) {
-      console.warn('Rust validation invocation failed, falling back to TS parser:', err);
+      console.warn('Rust validation invocation skipped, using client parser:', err);
     }
   }
-
-  // Fallback client-side validator (runs in browser mode or if IPC fails)
   return fallbackClientValidation(rawJson);
-}
-
-export async function minimizeWindow(): Promise<void> {
-  if (!isTauriEnvironment()) return;
-  try {
-    const { getCurrentWindow } = await import('@tauri-apps/api/window');
-    await getCurrentWindow().minimize();
-  } catch (err) {
-    console.error('Failed to minimize window:', err);
-  }
-}
-
-export async function toggleMaximizeWindow(): Promise<void> {
-  if (!isTauriEnvironment()) return;
-  try {
-    const { getCurrentWindow } = await import('@tauri-apps/api/window');
-    await getCurrentWindow().toggleMaximize();
-  } catch (err) {
-    console.error('Failed to toggle maximize window:', err);
-  }
-}
-
-export async function closeWindow(): Promise<void> {
-  if (!isTauriEnvironment()) return;
-  try {
-    const { getCurrentWindow } = await import('@tauri-apps/api/window');
-    await getCurrentWindow().close();
-  } catch (err) {
-    console.error('Failed to close window:', err);
-  }
-}
-
-export async function startDragging(): Promise<void> {
-  if (!isTauriEnvironment()) return;
-  try {
-    const { getCurrentWindow } = await import('@tauri-apps/api/window');
-    await getCurrentWindow().startDragging();
-  } catch (err) {
-    // Non-fatal
-  }
 }
 
 function fallbackClientValidation(rawJson: string): RustValidationResponse {

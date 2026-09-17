@@ -12,9 +12,9 @@ Download the latest pre-compiled binaries from [GitHub Releases](https://github.
 
 | Operating System | Package Type | Download / Install |
 | :--- | :--- | :--- |
-| **Windows** (10/11) | `.exe` Setup / Portable | Download `Synapse-MCQ-Studio_x64-setup.exe` or run `launch.bat` |
-| **macOS** (Apple Silicon & Intel) | `.dmg` Installer | Download `Synapse-MCQ-Studio_aarch64.dmg` or `_x64.dmg` |
-| **Arch Linux** | `.AppImage` / `PKGBUILD` | Run `chmod +x *.AppImage && ./*.AppImage` or use `packaging/archlinux/PKGBUILD` |
+| **Windows** (10/11) | Portable `.zip` / `.exe` | Download `Synapse-MCQ-Studio-v0.1.2-windows-x64.zip` or run `launch.bat` |
+| **macOS** (Apple Silicon & Intel) | `.dmg` Installer | Download `Synapse-MCQ-Studio-0.1.2_aarch64.dmg` or `_x64.dmg` |
+| **Arch Linux** | Native `.pkg.tar.zst` | `sudo pacman -U synapse-mcq-desktop-0.1.2-1-x86_64.pkg.tar.zst` |
 | **Ubuntu / Debian** | `.deb` Package | `sudo dpkg -i synapse-mcq-studio_*_amd64.deb` |
 
 ---
@@ -38,14 +38,15 @@ Download the latest pre-compiled binaries from [GitHub Releases](https://github.
 - **Deck Metrics**: Instant preview of question counts, detected topics, difficulty distribution, and estimated test duration.
 - **Question Bank**: Manage multiple quiz sets, search by topic/keyword, filter by difficulty, and export decks.
 
-### 3. 🧠 Revolutionary Obsidian-Spatial Quiz HUD
-- **Custom Frameless Window**: Sleek borderless obsidian design with custom traffic-light controls (minimize, maximize, close).
+### 3. 🧠 Precision Minimalist HUD & Pointed Geometry
+- **Pointed Industrial Aesthetic**: Strict geometric pointed corners (`rounded-none`), zero-radius panels, clean hair-thin borders (`#27272A`), and an understated dark zinc + precision emerald palette.
+- **Native Frameless Titlebar Controls**: Dedicated Minimize (`_`), Maximize (`□`), and Close (`✕`) buttons with native OS-level IPC handlers that work reliably without dragging interference.
 - **Zen Practice Mode**:
   - Instant tactile feedback when clicking an option.
   - Animated Didactic Distractor Analysis: reveals why the chosen option is right AND explains why each distractor is incorrect.
 - **Simulated Exam Mode**:
   - Countdown timer with visual alerts when time is low.
-  - Floating Question Navigation Matrix Grid (Answered, Flagged, Unvisited).
+  - Square Question Navigation Matrix Grid (Answered, Flagged, Unvisited).
   - Answers locked until final submit with confirmation modal.
 - **KaTeX LaTeX Math Rendering**: Renders mathematical equations ($O(N \log N)$, $\sum_{i=1}^n$, formulas) cleanly.
 - **Cognitive Diagnostic Dashboard**: Mastery rating, topic-by-topic breakdown bars, and missed question review.

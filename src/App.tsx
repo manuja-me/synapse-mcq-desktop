@@ -63,11 +63,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-obsidian-950 text-slate-100 flex flex-col pt-11 relative overflow-x-hidden select-none">
-      {/* Ambient background glows */}
-      <div className="fixed top-12 left-1/4 w-[600px] h-[300px] bg-neon-cyan/5 rounded-full blur-[140px] pointer-events-none -z-10" />
-      <div className="fixed bottom-12 right-1/4 w-[600px] h-[300px] bg-neon-violet/5 rounded-full blur-[140px] pointer-events-none -z-10" />
-
+    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col pt-10 relative overflow-x-hidden select-none">
       {/* Top Frameless Window TitleBar */}
       <TitleBar
         activeDeckTitle={activeQuiz?.deck.title}
@@ -86,42 +82,42 @@ export function App() {
         ) : (
           <div className="space-y-6">
             {/* Nav Tabs Bar */}
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-              <nav className="flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-[#27272A] pb-3">
+              <nav className="flex items-center gap-1">
                 <button
                   onClick={() => setActiveTab('studio')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold font-mono tracking-wide transition-colors ${
                     activeTab === 'studio'
-                      ? 'bg-neon-cyan text-obsidian-950 font-bold shadow-glow-cyan'
-                      : 'bg-obsidian-900/80 text-slate-400 hover:text-slate-200 border border-white/5'
+                      ? 'bg-[#10B981] text-[#09090B] font-bold'
+                      : 'bg-[#121215] text-zinc-400 hover:text-zinc-200 border border-[#27272A]'
                   }`}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>AI Prompt Studio</span>
+                  <span>AI PROMPT STUDIO</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab('library')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold font-mono tracking-wide transition-colors ${
                     activeTab === 'library'
-                      ? 'bg-neon-cyan text-obsidian-950 font-bold shadow-glow-cyan'
-                      : 'bg-obsidian-900/80 text-slate-400 hover:text-slate-200 border border-white/5'
+                      ? 'bg-[#10B981] text-[#09090B] font-bold'
+                      : 'bg-[#121215] text-zinc-400 hover:text-zinc-200 border border-[#27272A]'
                   }`}
                 >
                   <BookOpen className="w-3.5 h-3.5" />
-                  <span>Question Bank ({decks.length})</span>
+                  <span>QUESTION BANK ({decks.length})</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab('import')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold font-mono tracking-wide transition-colors ${
                     activeTab === 'import'
-                      ? 'bg-neon-cyan text-obsidian-950 font-bold shadow-glow-cyan'
-                      : 'bg-obsidian-900/80 text-slate-400 hover:text-slate-200 border border-white/5'
+                      ? 'bg-[#10B981] text-[#09090B] font-bold'
+                      : 'bg-[#121215] text-zinc-400 hover:text-zinc-200 border border-[#27272A]'
                   }`}
                 >
                   <FileJson className="w-3.5 h-3.5" />
-                  <span>Ingest MCQ JSON</span>
+                  <span>INGEST MCQ JSON</span>
                 </button>
               </nav>
 
@@ -129,10 +125,10 @@ export function App() {
               {decks.length > 0 && activeTab === 'studio' && (
                 <button
                   onClick={() => handleStartQuiz(decks[0], 'practice')}
-                  className="hidden md:flex items-center gap-1.5 text-xs text-slate-400 hover:text-neon-cyan transition-colors"
+                  className="hidden md:flex items-center gap-1.5 text-xs text-zinc-400 hover:text-[#10B981] transition-colors font-mono"
                 >
-                  <Play className="w-3.5 h-3.5 text-neon-cyan" />
-                  <span>Quick Test ({decks[0].title.slice(0, 24)}...)</span>
+                  <Play className="w-3.5 h-3.5 text-[#10B981]" />
+                  <span>TEST: {decks[0].title.slice(0, 24)}...</span>
                 </button>
               )}
             </div>
@@ -160,9 +156,9 @@ export function App() {
 
       {/* Floating RAM Trim Toast */}
       {trimToast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-neon-emerald/20 border border-neon-emerald/50 text-neon-emerald text-xs font-mono shadow-glow-emerald animate-in fade-in slide-in-from-bottom-2 duration-150">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2.5 bg-[#121215] border border-[#10B981] text-[#10B981] text-xs font-mono animate-in fade-in duration-150 shadow-2xl">
           <Cpu className="w-4 h-4 animate-spin" />
-          <span>Working-Set RAM actively flushed to OS memory manager!</span>
+          <span>Working-Set RAM actively flushed to OS memory manager</span>
         </div>
       )}
 
