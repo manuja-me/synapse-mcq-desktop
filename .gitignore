@@ -8,6 +8,7 @@ dist/
 
 # Tauri & Rust build artifacts
 src-tauri/target/
+release-artifacts/
 **/*.rs.bk
 
 # Logs
