@@ -194,60 +194,7 @@ export async function performSelfUpdate(
     if (onProgress) onProgress(p);
   };
 
-  // Step 1: Try official @tauri-apps/plugin-updater if available
-  try {
-    const { check } = await import('@tauri-apps/plugin-updater');
-    const { relaunch } = await import('@tauri-apps/plugin-process');
-    const update = await check();
-    if (update?.available) {
-      let downloaded = 0;
-      let contentLength = 0;
-      await update.downloadAndInstall((event) => {
-        switch (event.event) {
-          case 'Started':
-            contentLength = event.data.contentLength || 0;
-            notify({
-              downloaded: 0,
-              total: contentLength,
-              percentage: 0,
-              stage: 'downloading',
-            });
-            break;
-          case 'Progress':
-            downloaded += event.data.chunkLength;
-            const pct = contentLength > 0 ? (downloaded / contentLength) * 100 : 0;
-            notify({
-              downloaded,
-              total: contentLength,
-              percentage: pct,
-              stage: 'downloading',
-            });
-            break;
-          case 'Finished':
-            notify({
-              downloaded: contentLength,
-              total: contentLength,
-              percentage: 100,
-              stage: 'replacing',
-            });
-            break;
-        }
-      });
-
-      notify({
-        downloaded,
-        total: contentLength,
-        percentage: 100,
-        stage: 'relaunching',
-      });
-      await relaunch();
-      return true;
-    }
-  } catch (pluginErr) {
-    console.warn('Tauri updater plugin check/download skipped, using native chunked self-replacer:', pluginErr);
-  }
-
-  // Step 2: Native chunked streaming & atomic disk replacement engine
+  // Native chunked streaming & atomic disk replacement engine
   const { invokeDownloadAndSelfReplace, listenUpdateDownloadProgress } = await import('./tauriBridge');
   let unlisten: (() => void) | null = null;
   try {
