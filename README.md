@@ -6,11 +6,11 @@
 
 **Ultra-Low-RAM, Native Cross-Platform Desktop Platform for AI-Powered PDF MCQ Testing & Learning**
 
-[![Version](https://img.shields.io/badge/version-v0.1.6-10B981.svg?style=flat-square)](https://github.com/manuja-me/synapse-mcq-desktop/releases/tag/v0.1.6)
+[![Version](https://img.shields.io/badge/version-v0.1.7-10B981.svg?style=flat-square)](https://github.com/manuja-me/synapse-mcq-desktop/releases/tag/v0.1.7)
 [![Framework](https://img.shields.io/badge/framework-Tauri%20v2%20+%20Rust-orange.svg?style=flat-square)](https://tauri.app/)
 [![Frontend](https://img.shields.io/badge/frontend-React%2019%20+%20Tailwind-blue.svg?style=flat-square)](https://react.dev/)
 [![RAM Target](https://img.shields.io/badge/memory-%3C%2045%20MB%20RAM-emerald.svg?style=flat-square)](#-ultra-low-ram-engineering)
-[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=flat-square)](https://github.com/manuja-me/synapse-mcq-desktop/releases/tag/v0.1.6)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=flat-square)](https://github.com/manuja-me/synapse-mcq-desktop/releases/tag/v0.1.7)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
 
 </div>
@@ -28,18 +28,18 @@
 
 ## 📥 Cross-Platform Binary Downloads
 
-Download the latest pre-compiled binaries from [**GitHub Releases (v0.1.6)**](https://github.com/manuja-me/synapse-mcq-desktop/releases/tag/v0.1.6):
+Download the latest pre-compiled binaries from [**GitHub Releases (v0.1.7)**](https://github.com/manuja-me/synapse-mcq-desktop/releases/tag/v0.1.7):
 
 | Operating System | Package Type | Download / Installation |
 | :--- | :--- | :--- |
-| **Windows 10 / 11** | Portable Standalone `.zip` | [**`Synapse-MCQ-Studio-v0.1.6-windows-x64.zip`**](https://github.com/manuja-me/synapse-mcq-desktop/releases/download/v0.1.6/Synapse-MCQ-Studio-v0.1.6-windows-x64.zip) *(Extract & Run `Synapse-MCQ-Studio.exe`)* |
-| **Windows 10 / 11** | NSIS Installer `.exe` | [**`Synapse.MCQ.Studio_0.1.6_x64-setup.exe`**](https://github.com/manuja-me/synapse-mcq-desktop/releases/download/v0.1.6/Synapse.MCQ.Studio_0.1.6_x64-setup.exe) |
-| **Windows 10 / 11** | MSI Enterprise `.msi` | [**`Synapse.MCQ.Studio_0.1.6_x64_en-US.msi`**](https://github.com/manuja-me/synapse-mcq-desktop/releases/download/v0.1.6/Synapse.MCQ.Studio_0.1.6_x64_en-US.msi) |
-| **macOS** (Apple Silicon) | Native `.dmg` Installer | [**`Synapse.MCQ.Studio_0.1.6_aarch64.dmg`**](https://github.com/manuja-me/synapse-mcq-desktop/releases/download/v0.1.6/Synapse.MCQ.Studio_0.1.6_aarch64.dmg) |
-| **Arch Linux** | Native `.pkg.tar.zst` | `sudo pacman -U synapse-mcq-desktop-0.1.6-1-x86_64.pkg.tar.zst` |
-| **Ubuntu / Debian** | `.deb` Package | `sudo dpkg -i Synapse.MCQ.Studio_0.1.6_amd64.deb` |
-| **Linux Universal** | Standalone `.AppImage` | `chmod +x Synapse.MCQ.Studio_0.1.6_amd64.AppImage && ./Synapse.MCQ.Studio_0.1.6_amd64.AppImage` |
-| **Verification** | SHA256 Checksums | [**`SHA256SUMS.txt`**](https://github.com/manuja-me/synapse-mcq-desktop/releases/download/v0.1.6/SHA256SUMS.txt) |
+| **Windows 10 / 11** | Portable Standalone `.zip` | [**`Synapse-MCQ-Studio-v0.1.7-windows-x64.zip`**](https://github.com/manuja-me/synapse-mcq-desktop/releases/download/v0.1.7/Synapse-MCQ-Studio-v0.1.7-windows-x64.zip) *(Extract & Run `Synapse-MCQ-Studio.exe`)* |
+| **Windows 10 / 11** | NSIS Installer `.exe` | [**`Synapse.MCQ.Studio_0.1.7_x64-setup.exe`**](https://github.com/manuja-me/synapse-mcq-desktop/releases/download/v0.1.7/Synapse.MCQ.Studio_0.1.7_x64-setup.exe) |
+| **Windows 10 / 11** | MSI Enterprise `.msi` | [**`Synapse.MCQ.Studio_0.1.7_x64_en-US.msi`**](https://github.com/manuja-me/synapse-mcq-desktop/releases/download/v0.1.7/Synapse.MCQ.Studio_0.1.7_x64_en-US.msi) |
+| **macOS** (Apple Silicon) | Native `.dmg` Installer | [**`Synapse.MCQ.Studio_0.1.7_aarch64.dmg`**](https://github.com/manuja-me/synapse-mcq-desktop/releases/download/v0.1.7/Synapse.MCQ.Studio_0.1.7_aarch64.dmg) |
+| **Arch Linux** | Native `.pkg.tar.zst` | `sudo pacman -U synapse-mcq-desktop-0.1.7-1-x86_64.pkg.tar.zst` |
+| **Ubuntu / Debian** | `.deb` Package | `sudo dpkg -i Synapse.MCQ.Studio_0.1.7_amd64.deb` |
+| **Linux Universal** | Standalone `.AppImage` | `chmod +x Synapse.MCQ.Studio_0.1.7_amd64.AppImage && ./Synapse.MCQ.Studio_0.1.7_amd64.AppImage` |
+| **Verification** | SHA256 Checksums | [**`SHA256SUMS.txt`**](https://github.com/manuja-me/synapse-mcq-desktop/releases/download/v0.1.7/SHA256SUMS.txt) |
 
 ---
 

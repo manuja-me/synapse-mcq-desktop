@@ -22,6 +22,7 @@ import { loadStoredDecks, saveStoredDecks } from '../../utils/storage';
 import { STARTER_DECKS } from '../../utils/sampleDecks';
 import { invokeTrimMemory, invokeGetDataDirectory, invokeOpenDataDirectory } from '../../utils/tauriBridge';
 import { ConfirmModal } from '../common/ConfirmModal';
+import { APP_VERSION } from '../../utils/version';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -151,7 +152,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       const data = await response.json();
       const latestTag = data.tag_name || '';
       setLatestVersion(latestTag);
-      const current = 'v0.1.6';
+      const current = APP_VERSION;
       if (latestTag && latestTag !== current) {
         setUpdateStatus('available');
       } else {
@@ -600,7 +601,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="p-3 bg-[#121215] border border-[#27272A] space-y-2 text-xs font-mono">
                   <div className="flex justify-between py-1 border-b border-[#27272A]/50">
                     <span className="text-zinc-500">Version</span>
-                    <span className="text-[#10B981] font-bold">v0.1.6</span>
+                    <span className="text-[#10B981] font-bold">{APP_VERSION}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-[#27272A]/50">
                     <span className="text-zinc-500">Runtime Architecture</span>
@@ -628,7 +629,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="text-[11px] text-zinc-500">
                         {updateStatus === 'idle' && 'Check for newer releases on GitHub'}
                         {updateStatus === 'checking' && 'Querying GitHub Releases API...'}
-                        {updateStatus === 'latest' && 'You are running the latest version (v0.1.6)!'}
+                        {updateStatus === 'latest' && `You are running the latest version (${APP_VERSION})!`}
                         {updateStatus === 'available' && `New release ${latestVersion} available!`}
                         {updateStatus === 'error' && 'Could not reach GitHub Releases API.'}
                       </div>

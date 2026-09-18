@@ -12,6 +12,7 @@ import {
   Check
 } from 'lucide-react';
 import { McqDeck } from '../../types/mcq';
+import { APP_VERSION } from '../../utils/version';
 
 interface SidebarProps {
   activeTab: 'studio' | 'library' | 'import';
@@ -182,7 +183,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <ShieldCheck className="w-3 h-3 text-[#10B981]" />
             <span>OFFLINE</span>
           </div>
-          <span className="text-zinc-400">v0.1.6</span>
+          <span className="text-zinc-400">{APP_VERSION}</span>
         </div>
       </div>
     </aside>
