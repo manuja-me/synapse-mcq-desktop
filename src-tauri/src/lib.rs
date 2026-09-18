@@ -240,6 +240,111 @@ fn chrono_like_timestamp() -> String {
     "Imported Session".to_string()
 }
 
+fn get_storage_dir(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
+    use tauri::Manager;
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to resolve app data dir: {}", e))?;
+    if !dir.exists() {
+        std::fs::create_dir_all(&dir)
+            .map_err(|e| format!("Failed to create app data dir: {}", e))?;
+    }
+    Ok(dir)
+}
+
+#[tauri::command]
+fn get_data_directory(app: tauri::AppHandle) -> Result<String, String> {
+    let dir = get_storage_dir(&app)?;
+    Ok(dir.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+fn open_data_directory(app: tauri::AppHandle) -> Result<bool, String> {
+    let dir = get_storage_dir(&app)?;
+    #[cfg(target_os = "windows")]
+    {
+        let _ = std::process::Command::new("explorer").arg(&dir).spawn();
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("open").arg(&dir).spawn();
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let _ = std::process::Command::new("xdg-open").arg(&dir).spawn();
+    }
+    Ok(true)
+}
+
+#[tauri::command]
+fn load_persistent_decks(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    let dir = get_storage_dir(&app)?;
+    let file_path = dir.join("decks.json");
+    if file_path.exists() {
+        let content = std::fs::read_to_string(&file_path)
+            .map_err(|e| format!("Failed to read decks file: {}", e))?;
+        Ok(Some(content))
+    } else {
+        Ok(None)
+    }
+}
+
+#[tauri::command]
+fn save_persistent_decks(app: tauri::AppHandle, json_content: String) -> Result<bool, String> {
+    let dir = get_storage_dir(&app)?;
+    let file_path = dir.join("decks.json");
+
+    // Optional rolling backup if file already exists and has content
+    if file_path.exists() {
+        let backup_dir = dir.join("backups");
+        let _ = std::fs::create_dir_all(&backup_dir);
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        let backup_file = backup_dir.join(format!("decks-backup-{}.json", timestamp));
+        let _ = std::fs::copy(&file_path, backup_file);
+
+        // Keep at most 10 recent backups
+        if let Ok(entries) = std::fs::read_dir(&backup_dir) {
+            let mut backups: Vec<_> = entries.filter_map(|e| e.ok()).collect();
+            if backups.len() > 10 {
+                backups.sort_by_key(|e| e.metadata().and_then(|m| m.modified()).ok());
+                for old in backups.iter().take(backups.len() - 10) {
+                    let _ = std::fs::remove_file(old.path());
+                }
+            }
+        }
+    }
+
+    std::fs::write(&file_path, json_content)
+        .map_err(|e| format!("Failed to write decks file: {}", e))?;
+    Ok(true)
+}
+
+#[tauri::command]
+fn load_persistent_settings(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    let dir = get_storage_dir(&app)?;
+    let file_path = dir.join("settings.json");
+    if file_path.exists() {
+        let content = std::fs::read_to_string(&file_path)
+            .map_err(|e| format!("Failed to read settings file: {}", e))?;
+        Ok(Some(content))
+    } else {
+        Ok(None)
+    }
+}
+
+#[tauri::command]
+fn save_persistent_settings(app: tauri::AppHandle, json_content: String) -> Result<bool, String> {
+    let dir = get_storage_dir(&app)?;
+    let file_path = dir.join("settings.json");
+    std::fs::write(&file_path, json_content)
+        .map_err(|e| format!("Failed to write settings file: {}", e))?;
+    Ok(true)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -258,7 +363,13 @@ pub fn run() {
             app_minimize,
             app_maximize,
             app_close,
-            parse_and_validate_deck
+            parse_and_validate_deck,
+            get_data_directory,
+            open_data_directory,
+            load_persistent_decks,
+            save_persistent_decks,
+            load_persistent_settings,
+            save_persistent_settings
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

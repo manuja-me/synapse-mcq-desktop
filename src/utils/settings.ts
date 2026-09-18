@@ -1,3 +1,5 @@
+import { invokeLoadPersistentSettings, invokeSavePersistentSettings } from './tauriBridge';
+
 export interface AppSettings {
   defaultMode: 'practice' | 'exam';
   examTimerSeconds: number;
@@ -36,7 +38,11 @@ export function loadSettings(): AppSettings {
 
 export function saveSettings(settings: AppSettings): void {
   try {
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    const serialized = JSON.stringify(settings, null, 2);
+    localStorage.setItem(SETTINGS_STORAGE_KEY, serialized);
+    invokeSavePersistentSettings(serialized).catch((err) => {
+      console.debug('Disk settings save error (non-fatal):', err);
+    });
   } catch (err) {
     console.error('Failed to save settings:', err);
   }
@@ -45,8 +51,27 @@ export function saveSettings(settings: AppSettings): void {
 export function resetSettings(): AppSettings {
   try {
     localStorage.removeItem(SETTINGS_STORAGE_KEY);
+    invokeSavePersistentSettings(JSON.stringify(DEFAULT_SETTINGS, null, 2)).catch(() => {});
   } catch (err) {
     console.error('Failed to clear settings:', err);
   }
   return { ...DEFAULT_SETTINGS };
+}
+
+export async function syncPersistentSettingsOnLaunch(): Promise<AppSettings> {
+  try {
+    const diskContent = await invokeLoadPersistentSettings();
+    if (diskContent && diskContent.trim().length > 0) {
+      const parsed = JSON.parse(diskContent) as AppSettings;
+      const merged = { ...DEFAULT_SETTINGS, ...parsed };
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged, null, 2));
+      return merged;
+    }
+    const current = loadSettings();
+    await invokeSavePersistentSettings(JSON.stringify(current, null, 2));
+    return current;
+  } catch (err) {
+    console.warn('Persistent settings launch sync skipped:', err);
+    return loadSettings();
+  }
 }

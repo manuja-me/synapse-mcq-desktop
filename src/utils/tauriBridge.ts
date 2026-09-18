@@ -183,3 +183,70 @@ function fallbackClientValidation(rawJson: string): RustValidationResponse {
     };
   }
 }
+
+export async function invokeGetDataDirectory(): Promise<string | null> {
+  if (!isTauriEnvironment()) return null;
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return await invoke<string>('get_data_directory');
+  } catch (err) {
+    console.debug('Failed to get data directory:', err);
+    return null;
+  }
+}
+
+export async function invokeOpenDataDirectory(): Promise<boolean> {
+  if (!isTauriEnvironment()) return false;
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return await invoke<boolean>('open_data_directory');
+  } catch (err) {
+    console.warn('Failed to open data directory:', err);
+    return false;
+  }
+}
+
+export async function invokeLoadPersistentDecks(): Promise<string | null> {
+  if (!isTauriEnvironment()) return null;
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return await invoke<string | null>('load_persistent_decks');
+  } catch (err) {
+    console.debug('Persistent decks load skipped or not available:', err);
+    return null;
+  }
+}
+
+export async function invokeSavePersistentDecks(jsonContent: string): Promise<boolean> {
+  if (!isTauriEnvironment()) return false;
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return await invoke<boolean>('save_persistent_decks', { jsonContent });
+  } catch (err) {
+    console.warn('Failed to persist decks to disk:', err);
+    return false;
+  }
+}
+
+export async function invokeLoadPersistentSettings(): Promise<string | null> {
+  if (!isTauriEnvironment()) return null;
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return await invoke<string | null>('load_persistent_settings');
+  } catch (err) {
+    console.debug('Persistent settings load skipped:', err);
+    return null;
+  }
+}
+
+export async function invokeSavePersistentSettings(jsonContent: string): Promise<boolean> {
+  if (!isTauriEnvironment()) return false;
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return await invoke<boolean>('save_persistent_settings', { jsonContent });
+  } catch (err) {
+    console.warn('Failed to persist settings to disk:', err);
+    return false;
+  }
+}
+

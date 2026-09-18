@@ -98,6 +98,33 @@ Download the latest pre-compiled binaries from [**GitHub Releases (v0.1.6)**](ht
 
 ---
 
+## 🔄 Upgrading Versions Without Losing Data
+
+Synapse MCQ Studio is engineered with **zero-data-loss architecture across updates**:
+
+1. **Persistent OS AppData Directory**:
+   All question decks (`decks.json`), automatic rolling backups (`backups/`), and user preferences (`settings.json`) are stored permanently in the operating system's standard Application Data folder:
+   - **Windows**: `%APPDATA%\com.synapse.mcq\` (e.g. `C:\Users\<user>\AppData\Roaming\com.synapse.mcq\`)
+   - **macOS**: `~/Library/Application Support/com.synapse.mcq/`
+   - **Linux**: `~/.local/share/com.synapse.mcq/`
+
+2. **How to Upgrade Seamlessly**:
+   - **Windows Portable**: Download the new `Synapse-MCQ-Studio-vX.Y.Z-windows-x64.zip` and extract it anywhere. When you launch `Synapse-MCQ-Studio.exe`, it automatically loads all your existing decks and exam histories from the OS directory.
+   - **Windows Installer (Setup / MSI)**: Run the new installer; it updates the binaries in `Program Files` while preserving your AppData storage.
+   - **macOS (`.dmg`)**: Drag the new `Synapse MCQ Studio.app` into Applications; macOS keeps your Application Support files intact.
+   - **Linux (`.pkg.tar.zst` / `.deb` / `.AppImage`)**: Upgrade via `pacman -U`, `dpkg -i`, or run the new `.AppImage`; user data in `~/.local/share/` is untouched.
+
+3. **Automatic Rolling Backups**:
+   - Before saving changes to `decks.json`, the app archives timestamped snapshots to `backups/decks-backup-<timestamp>.json` (retaining the 10 most recent backups).
+
+4. **Explorer Access & In-App Restores**:
+   - Press **<kbd>Ctrl+,</kbd>** (Settings) &rarr; **Storage & Data**:
+     - Click **Open Folder** to access or copy your raw `.json` files directly in File Explorer / Finder.
+     - Click **Export** to create a standalone backup file.
+     - Click **Restore JSON** to restore question sets from any saved backup.
+
+---
+
 ## ⚡ Ultra-Low-RAM Engineering
 
 Synapse MCQ Studio is specifically designed to operate within a **strict sub-45 MB RAM ceiling**:

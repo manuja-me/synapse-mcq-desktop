@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Settings,
   Sliders,
@@ -11,13 +11,16 @@ import {
   Download,
   Trash2,
   Check,
-  ExternalLink
+  ExternalLink,
+  FolderOpen,
+  Upload,
+  RefreshCw
 } from 'lucide-react';
 import { AppSettings, loadSettings, saveSettings, resetSettings } from '../../utils/settings';
 import { McqDeck } from '../../types/mcq';
 import { loadStoredDecks, saveStoredDecks } from '../../utils/storage';
 import { STARTER_DECKS } from '../../utils/sampleDecks';
-import { invokeTrimMemory } from '../../utils/tauriBridge';
+import { invokeTrimMemory, invokeGetDataDirectory, invokeOpenDataDirectory } from '../../utils/tauriBridge';
 import { ConfirmModal } from '../common/ConfirmModal';
 
 interface SettingsModalProps {
@@ -39,10 +42,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [ramTrimmed, setRamTrimmed] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [dataDirectoryPath, setDataDirectoryPath] = useState<string | null>(null);
+  const [importSuccessMessage, setImportSuccessMessage] = useState<string | null>(null);
+  const [importErrorMessage, setImportErrorMessage] = useState<string | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'latest' | 'available' | 'error'>('idle');
+  const [latestVersion, setLatestVersion] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setSettings(loadSettings());
+      invokeGetDataDirectory().then((dir) => {
+        if (dir) setDataDirectoryPath(dir);
+      });
     }
   }, [isOpen]);
 
@@ -104,6 +116,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const defaults = resetSettings();
     setSettings(defaults);
     if (onSettingsChanged) onSettingsChanged(defaults);
+  };
+
+  const handleImportBackupFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].questions) {
+          saveStoredDecks(parsed);
+          if (onDecksUpdated) onDecksUpdated(parsed);
+          setImportSuccessMessage(`Restored ${parsed.length} deck(s) from backup.`);
+          setImportErrorMessage(null);
+          setTimeout(() => setImportSuccessMessage(null), 3500);
+        } else {
+          setImportErrorMessage('Invalid backup file: JSON must contain an array of question decks.');
+        }
+      } catch (err: any) {
+        setImportErrorMessage('Failed to parse backup JSON: ' + (err?.message || 'Invalid syntax'));
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleCheckForUpdates = async () => {
+    setUpdateStatus('checking');
+    try {
+      const response = await fetch('https://api.github.com/repos/manuja-me/synapse-mcq-desktop/releases/latest');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      const latestTag = data.tag_name || '';
+      setLatestVersion(latestTag);
+      const current = 'v0.1.6';
+      if (latestTag && latestTag !== current) {
+        setUpdateStatus('available');
+      } else {
+        setUpdateStatus('latest');
+      }
+    } catch {
+      setUpdateStatus('error');
+    }
   };
 
   return (
@@ -412,15 +468,61 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     Question Bank & Storage Management
                   </h3>
                   <p className="text-[11px] text-zinc-400">
-                    Export backup copies of your question decks or reset starter sample questions.
+                    Your questions and attempts are permanently stored in your operating system's persistent app directory.
                   </p>
                 </div>
 
-                <div className="space-y-3 pt-2">
+                {importSuccessMessage && (
+                  <div className="p-2.5 bg-emerald-950/40 border border-[#10B981] text-[#10B981] text-xs font-mono flex items-center gap-2">
+                    <Check className="w-4 h-4 flex-shrink-0" />
+                    <span>{importSuccessMessage}</span>
+                  </div>
+                )}
+
+                {importErrorMessage && (
+                  <div className="p-2.5 bg-red-950/40 border border-red-800 text-red-300 text-xs font-mono flex items-center gap-2">
+                    <X className="w-4 h-4 flex-shrink-0" />
+                    <span>{importErrorMessage}</span>
+                  </div>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportBackupFile}
+                  className="hidden"
+                />
+
+                <div className="space-y-3 pt-1">
+                  {/* Persistent Directory Card */}
+                  <div className="p-3 bg-[#121215] border border-[#27272A] space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-medium text-zinc-200">Persistent OS AppData Storage</div>
+                        <div className="text-[11px] text-zinc-400 font-mono truncate" title={dataDirectoryPath || ''}>
+                          {dataDirectoryPath || 'Resolving local directory...'}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => invokeOpenDataDirectory()}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#18181B] border border-[#10B981] text-[#10B981] text-xs font-mono hover:bg-[#10B981] hover:text-[#09090B] transition-colors flex-shrink-0"
+                        title="Open folder in File Explorer / Finder"
+                      >
+                        <FolderOpen className="w-3.5 h-3.5" />
+                        <span>OPEN FOLDER</span>
+                      </button>
+                    </div>
+                    <div className="text-[10px] text-zinc-500 border-t border-[#27272A]/60 pt-1.5 leading-relaxed">
+                      🛡️ <strong>Upgrade Safety:</strong> All question decks (`decks.json`), automatic backups (`backups/`), and preferences (`settings.json`) live here. Updating or replacing app binaries will NEVER overwrite or delete this folder.
+                    </div>
+                  </div>
+
+                  {/* Export & Import Buttons */}
                   <div className="flex items-center justify-between p-3 bg-[#121215] border border-[#27272A]">
                     <div>
                       <div className="text-xs font-medium text-zinc-200">Export All Decks as JSON</div>
-                      <div className="text-[11px] text-zinc-500">Save a backup file of all decks, questions, and stats</div>
+                      <div className="text-[11px] text-zinc-500">Save a timestamped backup file of all question decks</div>
                     </div>
                     <button
                       onClick={handleExportData}
@@ -428,6 +530,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     >
                       <Download className="w-3.5 h-3.5 text-[#10B981]" />
                       <span>EXPORT</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-[#121215] border border-[#27272A]">
+                    <div>
+                      <div className="text-xs font-medium text-zinc-200">Import &amp; Restore Backup</div>
+                      <div className="text-[11px] text-zinc-500">Restore question sets from an existing exported .json file</div>
+                    </div>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#18181B] border border-[#27272A] hover:border-[#10B981] text-xs font-mono text-zinc-200 transition-colors"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-[#10B981]" />
+                      <span>RESTORE JSON</span>
                     </button>
                   </div>
 
@@ -441,14 +557,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-[#18181B] border border-[#27272A] hover:border-amber-500 text-xs font-mono text-zinc-200 transition-colors"
                     >
                       <RotateCcw className="w-3.5 h-3.5 text-amber-500" />
-                      <span>RESTORE</span>
+                      <span>RESET STARTERS</span>
                     </button>
                   </div>
 
                   <div className="flex items-center justify-between p-3 bg-[#121215] border border-red-950/40">
                     <div>
                       <div className="text-xs font-medium text-red-400">Clear All Decks</div>
-                      <div className="text-[11px] text-zinc-500">Irrevocably erase all saved question decks from storage</div>
+                      <div className="text-[11px] text-zinc-500">Erase all saved question decks from disk and storage</div>
                     </div>
                     <button
                       onClick={() => setConfirmClearOpen(true)}
@@ -476,7 +592,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       Synapse MCQ Studio
                     </h3>
                     <p className="text-[11px] text-zinc-400">
-                      Ultra-Low-RAM Desktop Platform for AI-Powered PDF MCQ Testing & Learning.
+                      Ultra-Low-RAM Desktop Platform for AI-Powered PDF MCQ Testing &amp; Learning.
                     </p>
                   </div>
                 </div>
@@ -495,13 +611,52 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <span className="text-zinc-300">&lt; 45 MB Working Set</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-[#27272A]/50">
-                    <span className="text-zinc-500">Network Telemetry</span>
-                    <span className="text-emerald-400">0% (Strictly Offline &amp; Local)</span>
+                    <span className="text-zinc-500">Data Persistence</span>
+                    <span className="text-emerald-400">Persistent OS AppData File Storage</span>
                   </div>
                   <div className="flex justify-between py-1">
                     <span className="text-zinc-500">Repository</span>
                     <span className="text-zinc-300">github.com/manuja-me/synapse-mcq-desktop</span>
                   </div>
+                </div>
+
+                {/* In-App Update Checker */}
+                <div className="p-3 bg-[#121215] border border-[#27272A] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-medium text-zinc-200">Software Updates</div>
+                      <div className="text-[11px] text-zinc-500">
+                        {updateStatus === 'idle' && 'Check for newer releases on GitHub'}
+                        {updateStatus === 'checking' && 'Querying GitHub Releases API...'}
+                        {updateStatus === 'latest' && 'You are running the latest version (v0.1.6)!'}
+                        {updateStatus === 'available' && `New release ${latestVersion} available!`}
+                        {updateStatus === 'error' && 'Could not reach GitHub Releases API.'}
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleCheckForUpdates}
+                      disabled={updateStatus === 'checking'}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#18181B] border border-[#27272A] hover:border-[#10B981] text-xs font-mono text-zinc-200 transition-colors"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 text-[#10B981] ${updateStatus === 'checking' ? 'animate-spin' : ''}`} />
+                      <span>CHECK</span>
+                    </button>
+                  </div>
+
+                  {updateStatus === 'available' && (
+                    <div className="p-2 bg-emerald-950/40 border border-[#10B981] text-xs font-mono flex items-center justify-between">
+                      <span className="text-emerald-300">Upgrade to {latestVersion} (data is preserved automatically)</span>
+                      <a
+                        href="https://github.com/manuja-me/synapse-mcq-desktop/releases/latest"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1 text-[#10B981] underline text-[11px]"
+                      >
+                        <span>Download</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

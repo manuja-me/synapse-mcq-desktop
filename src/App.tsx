@@ -9,9 +9,9 @@ import {
   Play
 } from 'lucide-react';
 import { McqDeck } from './types/mcq';
-import { loadStoredDecks } from './utils/storage';
+import { loadStoredDecks, syncPersistentDecksOnLaunch } from './utils/storage';
 import { invokeTrimMemory } from './utils/tauriBridge';
-import { AppSettings, loadSettings } from './utils/settings';
+import { AppSettings, loadSettings, syncPersistentSettingsOnLaunch } from './utils/settings';
 import { TitleBar } from './components/common/TitleBar';
 import { Sidebar } from './components/common/Sidebar';
 import { SettingsModal } from './components/settings/SettingsModal';
@@ -33,11 +33,24 @@ export function App() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [trimToast, setTrimToast] = useState(false);
 
-  // Load decks and settings on mount
+  // Load decks and settings on mount and sync with persistent OS disk storage
   useEffect(() => {
-    const loadedDecks = loadStoredDecks();
-    setDecks(loadedDecks);
+    // 1. Instant load from localStorage
+    setDecks(loadStoredDecks());
     setSettings(loadSettings());
+
+    // 2. Synchronize with persistent AppData disk files (survives updates, re-installs, and portable moves)
+    syncPersistentDecksOnLaunch().then((diskDecks) => {
+      if (diskDecks && diskDecks.length > 0) {
+        setDecks(diskDecks);
+      }
+    });
+
+    syncPersistentSettingsOnLaunch().then((diskSettings) => {
+      if (diskSettings) {
+        setSettings(diskSettings);
+      }
+    });
   }, []);
 
   // Global keyboard shortcuts (Ctrl+, for Settings, Ctrl+K for Command Palette)

@@ -1,5 +1,6 @@
 import { McqDeck, QuizSessionState } from '../types/mcq';
 import { STARTER_DECKS } from './sampleDecks';
+import { invokeLoadPersistentDecks, invokeSavePersistentDecks } from './tauriBridge';
 
 const DECKS_STORAGE_KEY = 'synapse_mcq_decks_v1';
 const RECENT_SESSION_KEY = 'synapse_mcq_recent_session_v1';
@@ -22,9 +23,38 @@ export function loadStoredDecks(): McqDeck[] {
 
 export function saveStoredDecks(decks: McqDeck[]): void {
   try {
-    localStorage.setItem(DECKS_STORAGE_KEY, JSON.stringify(decks));
+    const serialized = JSON.stringify(decks, null, 2);
+    localStorage.setItem(DECKS_STORAGE_KEY, serialized);
+    // Asynchronously sync to persistent OS AppData disk file
+    invokeSavePersistentDecks(serialized).catch((err) => {
+      console.debug('Disk save error (non-fatal):', err);
+    });
   } catch (err) {
     console.error('Failed to save decks:', err);
+  }
+}
+
+/**
+ * Initializes persistent storage on app launch.
+ * Synchronizes between disk (AppData/com.synapse.mcq/decks.json) and localStorage.
+ */
+export async function syncPersistentDecksOnLaunch(): Promise<McqDeck[]> {
+  try {
+    const diskContent = await invokeLoadPersistentDecks();
+    if (diskContent && diskContent.trim().length > 0) {
+      const parsed = JSON.parse(diskContent) as McqDeck[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        localStorage.setItem(DECKS_STORAGE_KEY, JSON.stringify(parsed, null, 2));
+        return parsed;
+      }
+    }
+    // If no disk file exists yet, migrate current localStorage decks to disk
+    const current = loadStoredDecks();
+    await invokeSavePersistentDecks(JSON.stringify(current, null, 2));
+    return current;
+  } catch (err) {
+    console.warn('Persistent decks launch sync skipped:', err);
+    return loadStoredDecks();
   }
 }
 
