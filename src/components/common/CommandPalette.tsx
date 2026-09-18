@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Sparkles, BookOpen, Play, Clock, Cpu, X, FileJson } from 'lucide-react';
+import { Search, Sparkles, BookOpen, Play, Clock, Cpu, X, FileJson, Settings } from 'lucide-react';
 import { McqDeck } from '../../types/mcq';
 
 interface CommandPaletteProps {
@@ -8,6 +8,7 @@ interface CommandPaletteProps {
   onNavigate: (view: 'studio' | 'library' | 'quiz') => void;
   onStartQuiz: (deck: McqDeck, mode: 'practice' | 'exam') => void;
   onTrimMemory: () => void;
+  onOpenSettings?: () => void;
   decks: McqDeck[];
 }
 
@@ -17,6 +18,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onNavigate,
   onStartQuiz,
   onTrimMemory,
+  onOpenSettings,
   decks,
 }) => {
   const [query, setQuery] = useState('');
@@ -107,6 +109,25 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </div>
             <span className="text-[10px] font-mono text-zinc-500">Jump</span>
           </button>
+
+          {onOpenSettings && (
+            <button
+              onClick={() => {
+                onOpenSettings();
+                onClose();
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2 text-xs hover:bg-[#18181B] hover:text-[#10B981] transition-colors text-left group"
+            >
+              <div className="p-1.5 bg-[#18181B] border border-[#27272A] text-[#10B981]">
+                <Settings className="w-3.5 h-3.5" />
+              </div>
+              <div className="flex-1">
+                <div className="font-medium text-zinc-200 group-hover:text-[#10B981]">Settings & Preferences</div>
+                <div className="text-[11px] text-zinc-400">Configure quiz timers, gamification, and system RAM</div>
+              </div>
+              <span className="text-[10px] font-mono text-zinc-500">Ctrl+,</span>
+            </button>
+          )}
 
           <button
             onClick={() => {

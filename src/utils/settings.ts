@@ -1,0 +1,52 @@
+export interface AppSettings {
+  defaultMode: 'practice' | 'exam';
+  examTimerSeconds: number;
+  autoAdvanceOnAnswer: boolean;
+  autoAdvanceDelayMs: number;
+  enableRewardPops: boolean;
+  enableStreakMultipliers: boolean;
+  enableSpeedBonus: boolean;
+  autoTrimMemory: boolean;
+}
+
+export const DEFAULT_SETTINGS: AppSettings = {
+  defaultMode: 'practice',
+  examTimerSeconds: 60,
+  autoAdvanceOnAnswer: false,
+  autoAdvanceDelayMs: 800,
+  enableRewardPops: true,
+  enableStreakMultipliers: true,
+  enableSpeedBonus: true,
+  autoTrimMemory: true,
+};
+
+const SETTINGS_STORAGE_KEY = 'synapse_mcq_settings_v1';
+
+export function loadSettings(): AppSettings {
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (!raw) return { ...DEFAULT_SETTINGS };
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_SETTINGS, ...parsed };
+  } catch (err) {
+    console.warn('Failed to parse settings from storage, using defaults:', err);
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+export function saveSettings(settings: AppSettings): void {
+  try {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  } catch (err) {
+    console.error('Failed to save settings:', err);
+  }
+}
+
+export function resetSettings(): AppSettings {
+  try {
+    localStorage.removeItem(SETTINGS_STORAGE_KEY);
+  } catch (err) {
+    console.error('Failed to clear settings:', err);
+  }
+  return { ...DEFAULT_SETTINGS };
+}

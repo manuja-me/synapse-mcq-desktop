@@ -11,8 +11,7 @@ permissions:
 
 jobs:
   build:
-    permissions:
-      contents: write
+    name: Build (${{ matrix.os_name }})
     strategy:
       fail-fast: false
       matrix:
@@ -57,22 +56,41 @@ jobs:
       - name: Build Tauri Application
         run: bun run tauri build
 
-      # Generate native Arch Linux .pkg.tar.zst package
-      - name: Package Arch Linux .pkg.tar.zst
+      # Stage macOS Artifacts
+      - name: Stage Artifacts (macOS)
+        if: matrix.os_name == 'macos'
+        run: |
+          mkdir -p staging
+          find src-tauri/target/release/bundle/dmg -name "*.dmg" -exec cp {} staging/ \;
+          ls -lh staging/
+
+      # Stage Linux Artifacts (.deb, .AppImage, and native Arch .pkg.tar.zst)
+      - name: Stage Artifacts (Linux)
         if: matrix.os_name == 'linux'
         run: |
+          mkdir -p staging
+          
+          # Extract dynamic package version
           RAW_TAG=${GITHUB_REF#refs/tags/v}
-          PKG_VER=${RAW_TAG:-0.1.5}
+          if [[ "$RAW_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            PKG_VER=$RAW_TAG
+          else
+            PKG_VER=$(node -p "require('./package.json').version")
+          fi
+          
+          # Copy deb and AppImage packages
+          find src-tauri/target/release/bundle/deb -name "*.deb" -exec cp {} staging/ \;
+          find src-tauri/target/release/bundle/appimage -name "*.AppImage" -exec cp {} staging/ \;
+          
+          # Package Arch Linux .pkg.tar.zst
           PKG_DIR=arch-pkg
           mkdir -p $PKG_DIR/usr/bin
           mkdir -p $PKG_DIR/usr/share/applications
           mkdir -p $PKG_DIR/usr/share/icons/hicolor/128x128/apps
           
-          # Copy release binary
-          cp src-tauri/target/release/app $PKG_DIR/usr/bin/synapse-mcq || find src-tauri/target/release -name "app" -type f -exec cp {} $PKG_DIR/usr/bin/synapse-mcq \;
+          cp src-tauri/target/release/app $PKG_DIR/usr/bin/synapse-mcq || find src-tauri/target/release -maxdepth 1 -type f -name "app" -exec cp {} $PKG_DIR/usr/bin/synapse-mcq \;
           chmod +x $PKG_DIR/usr/bin/synapse-mcq
           
-          # Desktop entry
           cat << 'EOF' > $PKG_DIR/usr/share/applications/synapse-mcq.desktop
           [Desktop Entry]
           Name=Synapse MCQ Studio
@@ -84,7 +102,6 @@ jobs:
           Categories=Education;Development;
           EOF
           
-          # Icon
           cp src-tauri/icons/128x128.png $PKG_DIR/usr/share/icons/hicolor/128x128/apps/synapse-mcq.png
           
           INST_SIZE=$(du -sb $PKG_DIR | cut -f1)
@@ -108,37 +125,67 @@ jobs:
           EOF
           
           cd $PKG_DIR
-          tar --zstd -cf ../synapse-mcq-desktop-${PKG_VER}-1-x86_64.pkg.tar.zst .PKGINFO usr
+          tar --zstd -cf ../staging/synapse-mcq-desktop-${PKG_VER}-1-x86_64.pkg.tar.zst .PKGINFO usr
           cd ..
-          ls -lh synapse-mcq-desktop-*.pkg.tar.zst
+          ls -lh staging/
 
-      - name: Upload Artifacts to Release
-        id: upload_release
-        continue-on-error: ${{ matrix.os_name == 'windows' }}
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            synapse-mcq-desktop-*.pkg.tar.zst
-            src-tauri/target/release/bundle/appimage/*.AppImage
-            src-tauri/target/release/bundle/deb/*.deb
-            src-tauri/target/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/msi/*.msi
-            src-tauri/target/release/bundle/nsis/*.exe
-            release-assets/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Stage Windows Artifacts (NSIS Setup, MSI, and Portable .zip)
+      - name: Stage Artifacts (Windows)
+        if: matrix.os_name == 'windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "staging"
+          
+          # Copy NSIS setup .exe and MSI installer
+          if (Test-Path "src-tauri/target/release/bundle/nsis") {
+            Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*.exe" | Copy-Item -Destination "staging"
+          }
+          if (Test-Path "src-tauri/target/release/bundle/msi") {
+            Get-ChildItem -Path "src-tauri/target/release/bundle/msi" -Filter "*.msi" | Copy-Item -Destination "staging"
+          }
+          
+          # Create standalone portable zip bundle
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          New-Item -ItemType Directory -Force -Path "portable-bin"
+          Copy-Item "src-tauri/target/release/app.exe" -Destination "portable-bin/Synapse-MCQ-Studio.exe"
+          Compress-Archive -Path "portable-bin/*" -DestinationPath "staging/Synapse-MCQ-Studio-v$version-windows-x64.zip" -Force
+          Get-ChildItem -Path "staging"
 
-      - name: Retry Windows release upload once
-        if: matrix.os_name == 'windows' && steps.upload_release.outcome == 'failure' && startsWith(github.ref, 'refs/tags/')
+      # Upload runner artifacts to GitHub Actions storage
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.os_name }}
+          path: staging/*
+          if-no-files-found: error
+
+  release:
+    name: Publish Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: binaries-*
+          path: all-binaries
+          merge-multiple: true
+
+      - name: Generate SHA256 Checksums
+        run: |
+          cd all-binaries
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            synapse-mcq-desktop-*.pkg.tar.zst
-            src-tauri/target/release/bundle/appimage/*.AppImage
-            src-tauri/target/release/bundle/deb/*.deb
-            src-tauri/target/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/msi/*.msi
-            src-tauri/target/release/bundle/nsis/*.exe
+          files: all-binaries/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

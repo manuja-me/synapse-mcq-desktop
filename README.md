@@ -8,14 +8,15 @@ Built with **Rust + Tauri v2 + React 19 + Tailwind CSS**, Synapse MCQ Studio del
 
 ## 📥 Cross-Platform Binary Downloads
 
-Download the latest pre-compiled binaries from [GitHub Releases](https://github.com/manuja-me/synapse-mcq-desktop/releases):
+Download the latest pre-compiled binaries from [GitHub Releases (v0.1.6)](https://github.com/manuja-me/synapse-mcq-desktop/releases):
 
 | Operating System | Package Type | Download / Install |
 | :--- | :--- | :--- |
-| **Windows** (10/11) | Portable `.zip` / `.exe` | Download `Synapse-MCQ-Studio-v0.1.2-windows-x64.zip` or run `launch.bat` |
-| **macOS** (Apple Silicon & Intel) | `.dmg` Installer | Download `Synapse-MCQ-Studio-0.1.2_aarch64.dmg` or `_x64.dmg` |
-| **Arch Linux** | Native `.pkg.tar.zst` | `sudo pacman -U synapse-mcq-desktop-0.1.2-1-x86_64.pkg.tar.zst` |
-| **Ubuntu / Debian** | `.deb` Package | `sudo dpkg -i synapse-mcq-studio_*_amd64.deb` |
+| **Windows** (10/11) | Portable `.zip` / `.exe` | Download `Synapse-MCQ-Studio-v0.1.6-windows-x64.zip` |
+| **macOS** (Apple Silicon) | `.dmg` Installer | Download `Synapse.MCQ.Studio_0.1.6_aarch64.dmg` |
+| **Arch Linux** | Native `.pkg.tar.zst` | `sudo pacman -U synapse-mcq-desktop-0.1.6-1-x86_64.pkg.tar.zst` |
+| **Ubuntu / Debian** | `.deb` Package | `sudo dpkg -i Synapse.MCQ.Studio_0.1.6_amd64.deb` |
+| **Linux Universal** | `.AppImage` | `chmod +x Synapse.MCQ.Studio_0.1.6_amd64.AppImage && ./Synapse.MCQ.Studio_0.1.6_amd64.AppImage` |
 
 ---
 
@@ -68,6 +69,7 @@ The software is specifically engineered to **aggressively reduce RAM usage** whi
 | Shortcut | Action |
 | :--- | :--- |
 | `Ctrl + K` / `Cmd + K` | Open Universal Command Palette |
+| `Ctrl + ,` / `Cmd + ,` | Open Settings & Preferences |
 | `1`, `2`, `3`, `4` or `A`, `B`, `C`, `D` | Select Option A, B, C, or D |
 | `Left Arrow` / `Right Arrow` | Previous / Next Question |
 | `F` | Toggle Flag for Review |
