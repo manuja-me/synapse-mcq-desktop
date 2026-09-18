@@ -96,7 +96,7 @@ export interface PromptConfig {
 }
 
 export interface FlashcardPromptConfig {
-  cardCount: number;
+  cardCount: number | 'auto';
   difficulty: 'Balanced' | 'Easy' | 'Medium' | 'Hard';
   academicLevel: 'High School' | 'Undergraduate' | 'Graduate / Postgrad' | 'Professional Certification';
   theoryDepth: 'Atomic Definitions & Axioms' | 'Comprehensive & Multi-Part Concepts' | 'Comparative / Differences';
@@ -105,6 +105,7 @@ export interface FlashcardPromptConfig {
   exhaustiveTheory?: boolean;       // maximize theoretical elements from the document
   preventTopicDuplicates?: boolean; // no duplicate theory topics
   strictPdfScopeOnly?: boolean;     // strictly bounded to provided PDF scope
+  onlyTheoryNotes?: boolean;        // generate exclusively from theory parts of the note
 }
 
 export interface StudyHistoryEntry {

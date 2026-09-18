@@ -57,7 +57,7 @@ export const PromptStudio: React.FC<PromptStudioProps> = ({ onGoToIngestion }) =
   };
 
   const questionPresets = [5, 10, 15, 20, 30, 50];
-  const cardPresets = [5, 10, 15, 20, 25, 30];
+  const cardPresets: Array<number | 'auto'> = ['auto', 5, 10, 15, 20, 25, 30];
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-200">
@@ -143,24 +143,30 @@ export const PromptStudio: React.FC<PromptStudioProps> = ({ onGoToIngestion }) =
                     <span>Total Flashcards</span>
                   </label>
                   <span className="text-xs font-mono font-bold text-amber-400 bg-[#18181B] border border-[#27272A] px-2 py-0.5">
-                    {flashcardConfig.cardCount} Cards
+                    {flashcardConfig.cardCount === 'auto' ? '⚡ Auto (AI-Determined)' : `${flashcardConfig.cardCount} Cards`}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {cardPresets.map((count) => (
+                  {cardPresets.map((preset) => (
                     <button
-                      key={count}
-                      onClick={() => setFlashcardConfig((prev) => ({ ...prev, cardCount: count }))}
+                      key={preset}
+                      onClick={() => setFlashcardConfig((prev) => ({ ...prev, cardCount: preset }))}
                       className={`px-3 py-1 text-xs font-mono transition-colors ${
-                        flashcardConfig.cardCount === count
+                        flashcardConfig.cardCount === preset
                           ? 'bg-amber-400 text-black font-bold'
                           : 'bg-[#18181B] text-zinc-400 hover:text-zinc-200 border border-[#27272A]'
                       }`}
                     >
-                      {count}
+                      {preset === 'auto' ? '⚡ Auto (AI Dynamic)' : preset}
                     </button>
                   ))}
                 </div>
+                {flashcardConfig.cardCount === 'auto' && (
+                  <div className="text-[11px] text-amber-400/90 font-mono bg-amber-950/20 border border-amber-900/40 p-2 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 flex-shrink-0 text-amber-400" />
+                    <span>AI analyzes the note and dynamically generates as many cards as needed to cover all distinct theory concepts.</span>
+                  </div>
+                )}
               </div>
 
               {/* Difficulty */}
@@ -237,6 +243,15 @@ export const PromptStudio: React.FC<PromptStudioProps> = ({ onGoToIngestion }) =
                   Theory Scope & Non-Duplication Guardrails
                 </div>
                 <div className="space-y-1.5 font-mono text-xs">
+                  <label className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-zinc-100">
+                    <input
+                      type="checkbox"
+                      checked={flashcardConfig.onlyTheoryNotes !== false}
+                      onChange={(e) => setFlashcardConfig((prev) => ({ ...prev, onlyTheoryNotes: e.target.checked }))}
+                      className="w-3.5 h-3.5 accent-amber-400 bg-[#18181B] border border-[#27272A]"
+                    />
+                    <span>Theory Cards Only from Notes (Skip exercises, calculations & admin notes)</span>
+                  </label>
                   <label className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-zinc-100">
                     <input
                       type="checkbox"

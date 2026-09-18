@@ -15,7 +15,7 @@ export const DEFAULT_PROMPT_CONFIG: PromptConfig = {
 };
 
 export const DEFAULT_FLASHCARD_CONFIG: FlashcardPromptConfig = {
-  cardCount: 15,
+  cardCount: 'auto',
   difficulty: 'Balanced',
   academicLevel: 'Undergraduate',
   theoryDepth: 'Comprehensive & Multi-Part Concepts',
@@ -24,6 +24,7 @@ export const DEFAULT_FLASHCARD_CONFIG: FlashcardPromptConfig = {
   exhaustiveTheory: true,
   preventTopicDuplicates: true,
   strictPdfScopeOnly: true,
+  onlyTheoryNotes: true,
 };
 
 export function buildAntigravityPrompt(config: PromptConfig): string {
@@ -123,11 +124,25 @@ export function buildFlashcardPrompt(config: FlashcardPromptConfig): string {
     ? `\n- **Exhaustive Theory Extraction**: Extract as many core theoretical elements, definitions, and mechanisms from across the entire PDF as possible to achieve comprehensive mastery.`
     : '';
 
+  const theoryNotesRule = config.onlyTheoryNotes !== false
+    ? `\n- **Strict Theory-Only Extraction from Notes (CRITICAL INVARIANT)**: Generate flashcards ONLY from theoretical concepts, principles, axioms, architectural models, mechanisms, conditions, laws, and definitions presented in the study notes.
+  * DO NOT generate flashcards for homework exercises, assignment instructions, laboratory setup, syllabus announcements, administrative slide notes, or numerical calculation steps.
+  * Every card must test a foundational piece of theoretical knowledge suitable for active recall and conceptual memorization.`
+    : '';
+
+  const totalCardsRequirement = config.cardCount === 'auto'
+    ? `1. **Total Flashcards (DYNAMIC & AI-DETERMINED)**:
+   - Do NOT restrict generation to a fixed or arbitrary number.
+   - Autonomously analyze the depth, density, and breadth of the provided study notes / PDF document.
+   - Generate as many high-yield flashcards as there are distinct theoretical concepts, axioms, laws, definitions, mechanisms, and rules in the text.
+   - Let the document's theoretical volume dictate the exact card count so that 100% of the theory is captured without omissions or artificial filler.`
+    : `1. **Total Flashcards**: Exactly ${config.cardCount} high-yield theory flashcards.`;
+
   return `You are an expert cognitive scientist and pedagogy specialist. Analyze the provided PDF document / study material and generate a high-yield set of Theory Flashcards focused purely on memorizing core concepts, definitions, mechanisms, and theoretical rules.
 
 ### Generation Requirements:
-1. **Total Flashcards**: Exactly ${config.cardCount} high-yield theory flashcards.
-2. **Theory Focus**: Extract ONLY fundamental theory parts (definitions, axioms, mechanisms, conditions, laws, taxonomies). Avoid trivial factoids.
+${totalCardsRequirement}
+2. **Theory Focus**: Extract ONLY fundamental theory parts (definitions, axioms, mechanisms, conditions, laws, taxonomies). Avoid trivial factoids, procedural logistics, or numerical exercises.
 3. **Target Academic Level**: ${config.academicLevel}.
 4. **Theory Depth**: ${config.theoryDepth}.
 5. **Self-Contained Concepts**: Front prompts must never reference external slide/page numbers (e.g. NEVER "Look at slide X"). State the concept or theoretical question directly.
@@ -136,10 +151,11 @@ export function buildFlashcardPrompt(config: FlashcardPromptConfig): string {
    - For single-definition cards, "back" can be a single string or 1-element array.
 7. **Language**: ${config.language}.${directivesSection}
 
-### Crucial Pedagogical & Formatting Rules:${scopeRule}${nonDuplicationRule}${exhaustiveRule}
+### Crucial Pedagogical & Formatting Rules:${theoryNotesRule}${scopeRule}${nonDuplicationRule}${exhaustiveRule}
 - Return **ONLY valid, parseable JSON** inside a single markdown code block (\`\`\`json ... \`\`\`).
 - Do NOT output conversational preamble, disclaimers, or postscript.
 - Set \`"deck_type": "flashcard"\` at the root.
+- Set \`"total_cards"\` in metadata to the exact total number of flashcards generated.
 - Ensure all quotes, LaTeX symbols, and special characters are properly escaped.
 
 ### Output JSON Schema:
@@ -150,7 +166,7 @@ export function buildFlashcardPrompt(config: FlashcardPromptConfig): string {
   "description": "High-yield theory flashcards for core definitions and mechanisms",
   "metadata": {
     "difficulty": "${config.difficulty}",
-    "total_cards": ${config.cardCount},
+    "total_cards": ${config.cardCount === 'auto' ? '<exact_number_generated>' : config.cardCount},
     "target_audience": "${config.academicLevel}"
   },
   "cards": [
