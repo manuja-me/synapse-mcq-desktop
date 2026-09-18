@@ -56,7 +56,7 @@ export const PromptStudio: React.FC<PromptStudioProps> = ({ onGoToIngestion }) =
     }
   };
 
-  const questionPresets = [5, 10, 15, 20, 30, 50];
+  const questionPresets: Array<number | 'auto'> = ['auto', 5, 10, 15, 20, 30, 50];
   const cardPresets: Array<number | 'auto'> = ['auto', 5, 10, 15, 20, 25, 30];
 
   return (
@@ -292,24 +292,30 @@ export const PromptStudio: React.FC<PromptStudioProps> = ({ onGoToIngestion }) =
                     <span>Total Questions</span>
                   </label>
                   <span className="text-xs font-mono font-bold text-[#10B981] bg-[#18181B] border border-[#27272A] px-2 py-0.5">
-                    {mcqConfig.questionCount} MCQs
+                    {mcqConfig.questionCount === 'auto' ? '⚡ Auto (AI-Determined)' : `${mcqConfig.questionCount} MCQs`}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {questionPresets.map((count) => (
+                  {questionPresets.map((preset) => (
                     <button
-                      key={count}
-                      onClick={() => setMcqConfig((prev) => ({ ...prev, questionCount: count }))}
+                      key={preset}
+                      onClick={() => setMcqConfig((prev) => ({ ...prev, questionCount: preset }))}
                       className={`px-3 py-1 text-xs font-mono transition-colors ${
-                        mcqConfig.questionCount === count
+                        mcqConfig.questionCount === preset
                           ? 'bg-[#10B981] text-[#09090B] font-bold'
                           : 'bg-[#18181B] text-zinc-400 hover:text-zinc-200 border border-[#27272A]'
                       }`}
                     >
-                      {count}
+                      {preset === 'auto' ? '⚡ Auto (AI Dynamic)' : preset}
                     </button>
                   ))}
                 </div>
+                {mcqConfig.questionCount === 'auto' && (
+                  <div className="text-[11px] text-[#10B981]/90 font-mono bg-emerald-950/20 border border-emerald-900/40 p-2 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 flex-shrink-0 text-[#10B981]" />
+                    <span>AI analyzes the PDF and dynamically generates as many high-quality MCQs as needed to cover all distinct theory concepts.</span>
+                  </div>
+                )}
               </div>
 
               {/* Difficulty Dropdown */}

@@ -1,7 +1,7 @@
 import { PromptConfig, FlashcardPromptConfig } from '../types/mcq';
 
 export const DEFAULT_PROMPT_CONFIG: PromptConfig = {
-  questionCount: 10,
+  questionCount: 'auto',
   difficulty: 'Balanced',
   archetype: 'Conceptual & Theory',
   academicLevel: 'Undergraduate',
@@ -48,10 +48,18 @@ export function buildAntigravityPrompt(config: PromptConfig): string {
     ? `\n- **Exhaustive Theory Extraction**: Extract as many core theoretical elements across the entire document as possible, maximizing pedagogical coverage across all sections.`
     : '';
 
+  const totalQuestionsRequirement = config.questionCount === 'auto'
+    ? `1. **Total Questions (DYNAMIC & AI-DETERMINED)**:
+   - Do NOT restrict generation to a fixed or arbitrary quota.
+   - Autonomously analyze the depth, scope, and theoretical density of the provided PDF document.
+   - Generate as many high-quality, intellectually rigorous, non-duplicating MCQs as needed to thoroughly evaluate all core theoretical principles, mechanisms, and rules.
+   - Let the document's theoretical volume dictate the exact question count without omission or superficial filler.`
+    : `1. **Total Questions**: Exactly ${config.questionCount} high-quality MCQs.`;
+
   return `You are an expert examiner and pedagogy specialist. Analyze the provided PDF document / study material and generate a rigorous set of Multiple Choice Questions (MCQs) strictly conforming to the JSON specification below.
 
 ### Generation Requirements:
-1. **Total Questions**: Exactly ${config.questionCount} high-quality MCQs.
+${totalQuestionsRequirement}
 2. **Difficulty Target**: ${config.difficulty}.
 3. **Question Archetype**: ${config.archetype}. Ensure the questions test genuine comprehension, deductive reasoning, and key principles from the text.
 4. **Target Academic Level**: ${config.academicLevel}.
@@ -64,6 +72,7 @@ export function buildAntigravityPrompt(config: PromptConfig): string {
 - Return **ONLY valid, parseable JSON** inside a single markdown code block (\`\`\`json ... \`\`\`).
 - Do NOT output conversational preamble, disclaimers, or postscript.
 - Ensure all quotes and special characters are properly escaped.
+- Set \`"total_questions"\` in metadata to the exact total number of questions generated.
 - Each question MUST have exactly one unambiguous correct answer, specified as a 0-indexed integer in \`correct_answer\`.
 - All distractors must be plausible and intellectually engaging.
 
@@ -75,7 +84,7 @@ export function buildAntigravityPrompt(config: PromptConfig): string {
   "description": "Comprehensive MCQ test set extracted from the provided PDF",
   "metadata": {
     "difficulty": "${config.difficulty}",
-    "total_questions": ${config.questionCount},
+    "total_questions": ${config.questionCount === 'auto' ? '<exact_number_generated>' : config.questionCount},
     "target_audience": "${config.academicLevel}"
   },
   "questions": [

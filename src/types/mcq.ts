@@ -82,7 +82,7 @@ export interface QuizSessionState {
 }
 
 export interface PromptConfig {
-  questionCount: number;
+  questionCount: number | 'auto';
   difficulty: 'Balanced' | 'Easy' | 'Medium' | 'Hard' | 'Progressive Adaptive';
   archetype: 'Conceptual & Theory' | 'Practical / Application' | 'Case Study & Scenario' | 'High-Yield Board Exam' | 'Edge Cases & Trick Questions';
   academicLevel: 'High School' | 'Undergraduate' | 'Graduate / Postgrad' | 'Professional Certification' | 'Corporate Training';
