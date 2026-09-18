@@ -3,7 +3,6 @@ import {
   Flag,
   CheckCircle2,
   XCircle,
-  Lightbulb,
   Sparkles,
   Flame,
   Zap,
@@ -47,6 +46,24 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
   const slideClass =
     direction === 'forward' ? 'animate-slide-right' : 'animate-slide-left';
+
+  const getOptionExplanation = (optIndex: number): string | null => {
+    const isRight = optIndex === question.correct_answer;
+    const distractor = question.distractor_explanations?.[optIndex]?.trim();
+    const explanation = question.explanation?.trim();
+
+    if (isRight) {
+      if (explanation) {
+        if (distractor && !/^correct(\s+answer)?\.?$/i.test(distractor) && distractor !== explanation) {
+          return `${distractor} ${explanation}`;
+        }
+        return explanation;
+      }
+      return distractor || 'Correct answer.';
+    }
+
+    return distractor || null;
+  };
 
   return (
     <div className={`space-y-4 ${slideClass}`}>
@@ -143,6 +160,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           const letter = optionLetters[optIndex] || String(optIndex + 1);
           const isSelected = selectedIndex === optIndex;
           const isCorrectAnswer = optIndex === question.correct_answer;
+          const explanationText =
+            mode === 'practice' && isAnswered ? getOptionExplanation(optIndex) : null;
 
           // Styling logic for Practice vs Exam mode
           let cardStyle =
@@ -161,7 +180,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 'bg-red-500/15 border-red-500 text-zinc-100';
               letterBadgeStyle = 'bg-red-500 text-white font-bold';
             } else {
-              cardStyle = 'opacity-35 border-[#27272A] text-zinc-500';
+              cardStyle = 'bg-[#121215]/80 border-[#27272A] text-zinc-400';
+              letterBadgeStyle = 'bg-[#18181B] text-zinc-500 border-[#27272A]';
             }
           } else if (isSelected) {
             // Exam Mode selected
@@ -175,7 +195,11 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               key={optIndex}
               onClick={() => onSelectOption(optIndex)}
               disabled={mode === 'practice' && isAnswered}
-              className={`w-full text-left p-4 flex items-start gap-4 snappy-press ${cardStyle} cursor-pointer group`}
+              className={`w-full text-left p-4 flex items-start gap-4 transition-all ${
+                mode === 'practice' && isAnswered
+                  ? 'cursor-default'
+                  : 'cursor-pointer snappy-press'
+              } ${cardStyle} group`}
             >
               {/* Option Letter Key */}
               <div
@@ -184,9 +208,25 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 {letter}
               </div>
 
-              {/* Option Text */}
+              {/* Option Text & Inlined Didactic Explanation */}
               <div className="flex-1 text-sm sm:text-base leading-relaxed pt-0.5">
-                <MathText text={optionText} />
+                <div>
+                  <MathText text={optionText} />
+                </div>
+
+                {explanationText && (
+                  <div
+                    className={`mt-2.5 pt-2 border-t text-xs italic leading-relaxed animate-in fade-in duration-200 ${
+                      isCorrectAnswer
+                        ? 'border-[#10B981]/30 text-emerald-300'
+                        : isSelected
+                        ? 'border-red-500/30 text-red-300/90'
+                        : 'border-[#27272A] text-zinc-400'
+                    }`}
+                  >
+                    <MathText text={explanationText} />
+                  </div>
+                )}
               </div>
 
               {/* Practice Status Icon */}
@@ -215,61 +255,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             <span className="text-[10px] opacity-75 font-normal">[SPACE / ENTER]</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
-        </div>
-      )}
-
-      {/* Practice Mode: Animated Didactic Explanation Breakdown */}
-      {mode === 'practice' && isAnswered && (
-        <div className="bg-[#121215] border border-[#27272A] p-5 space-y-4 animate-in fade-in duration-150">
-          <div className="flex items-center gap-2 text-[#10B981] border-b border-[#27272A] pb-2.5">
-            <Lightbulb className="w-5 h-5 text-amber-400" />
-            <span className="text-xs font-bold tracking-wide font-mono uppercase">
-              Didactic Rationale & Distractor Analysis
-            </span>
-          </div>
-
-          {/* Primary Explanation */}
-          {question.explanation && (
-            <div className="p-3.5 bg-[#09090B] border border-[#27272A] text-xs text-zinc-200 leading-relaxed">
-              <div className="font-semibold text-[#10B981] mb-1 flex items-center gap-1 font-mono text-[11px] uppercase">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Why Option {optionLetters[question.correct_answer]} is Correct:</span>
-              </div>
-              <MathText text={question.explanation} />
-            </div>
-          )}
-
-          {/* Dedicated Distractor Breakdowns */}
-          {question.distractor_explanations &&
-            question.distractor_explanations.length > 0 && (
-              <div className="space-y-2 pt-1">
-                <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
-                  Distractor Breakdown:
-                </div>
-                <div className="space-y-1.5">
-                  {question.distractor_explanations.map((reason, i) => {
-                    const isRight = i === question.correct_answer;
-                    return (
-                      <div
-                        key={i}
-                        className={`p-2.5 text-xs flex items-start gap-2 ${
-                          isRight
-                            ? 'bg-[#10B981]/10 border border-[#10B981]/30 text-zinc-200'
-                            : 'bg-[#18181B] border border-[#27272A] text-zinc-400'
-                        }`}
-                      >
-                        <span className="font-mono font-bold text-[10px] px-1.5 py-0.5 bg-[#09090B] border border-[#27272A] flex-shrink-0">
-                          Option {optionLetters[i]}
-                        </span>
-                        <div className="flex-1 leading-relaxed">
-                          <MathText text={reason} />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
         </div>
       )}
     </div>

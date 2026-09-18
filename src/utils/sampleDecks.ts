@@ -196,5 +196,95 @@ export const STARTER_DECKS: McqDeck[] = [
         tags: ["RoPE", "Embeddings", "LLM"]
       }
     ]
+  },
+  {
+    id: 'deck-systems-theory-flashcards',
+    title: 'Operating Systems & Distributed Theory',
+    deck_type: 'flashcard',
+    description: 'High-yield theoretical principles: Coffman conditions, ACID invariants, CAP theorem, and memory hierarchy laws.',
+    created_at: Date.now() - 3600000 * 12,
+    metadata: {
+      difficulty: 'Balanced',
+      total_cards: 6,
+      target_audience: 'Undergraduate / Systems Engineers',
+      source: 'Classic Distributed Systems & OS Theory'
+    },
+    questions: [],
+    cards: [
+      {
+        id: 1,
+        front: "What are the four necessary Coffman conditions required for a deadlock to occur?",
+        back: [
+          "Mutual Exclusion: At least one resource must be held in a non-shareable mode.",
+          "Hold and Wait: A process holds resources while waiting for additional allocations.",
+          "No Preemption: Resources cannot be forcibly expropriated from a process holding them.",
+          "Circular Wait: A closed loop of processes exists where each process waits for a resource held by the next."
+        ],
+        explanation: "Eliminating any single one of these four conditions mathematically guarantees prevention of deadlocks (e.g. strict resource ordering eliminates circular wait).",
+        topic: "Concurrency Theory",
+        difficulty: "medium",
+        tags: ["Deadlock", "Coffman", "Concurrency"]
+      },
+      {
+        id: 2,
+        front: "State and define the four ACID properties of transactional database systems.",
+        back: [
+          "Atomicity: Transactions execute as an all-or-nothing unit of work; partial execution is rolled back.",
+          "Consistency: Transactions transition the database from one valid state satisfying all invariants to another.",
+          "Isolation: Concurrent execution yields system states equivalent to serial (sequential) execution.",
+          "Durability: Once committed, state changes survive any subsequent hardware failure or crash."
+        ],
+        explanation: "ACID guarantees data validity despite power failures, crashes, and concurrent interleaved access.",
+        topic: "Database Systems",
+        difficulty: "easy",
+        tags: ["ACID", "Transactions", "Databases"]
+      },
+      {
+        id: 3,
+        front: "What is the CAP Theorem (Brewer's Conjecture) in distributed computing?",
+        back: [
+          "Consistency (Linearizability): Every read receives the most recent write or an error.",
+          "Availability: Every non-failing node returns a non-error response for every received request (no latency guarantees).",
+          "Partition Tolerance: The system continues to operate despite arbitrary message loss or network partitions."
+        ],
+        explanation: "Because physical network partitions cannot be avoided in distributed networks, systems must fundamentally trade off between CP and AP during network disruptions.",
+        topic: "Distributed Systems",
+        difficulty: "medium",
+        tags: ["CAP", "Distributed", "Consensus"]
+      },
+      {
+        id: 4,
+        front: "Define the Principle of Locality in memory hierarchies and explain its two dimensions.",
+        back: [
+          "Temporal Locality: If a specific memory location is referenced, it is highly likely to be referenced again in the near future (e.g. loop iterations, stack pointers).",
+          "Spatial Locality: If a specific memory location is referenced, memory locations with proximate addresses are likely to be accessed soon (e.g. array traversals, sequential instruction fetches)."
+        ],
+        explanation: "Caches, TLBs, and hardware prefetchers exploit these two statistical behaviors to achieve low effective memory access latency.",
+        topic: "Memory Systems",
+        difficulty: "easy",
+        tags: ["Locality", "Cache", "Memory"]
+      },
+      {
+        id: 5,
+        front: "What is the difference between Preemptive and Non-Preemptive CPU Scheduling?",
+        back: [
+          "Preemptive Scheduling: The OS kernel can interrupt a running process and reallocate CPU cycles to another runnable process based on priorities or quantum expiration (e.g. Round Robin, Multi-Level Feedback Queue).",
+          "Non-Preemptive Scheduling: A process retains CPU control until it voluntarily yields, requests blocking I/O, or terminates (e.g. First-Come First-Served, Shortest Job First without preemption)."
+        ],
+        explanation: "Preemptive scheduling prevents rogue or monopolizing compute loops from hanging interactive operating environments.",
+        topic: "CPU Scheduling",
+        difficulty: "medium",
+        tags: ["Scheduling", "Kernel", "CPU"]
+      },
+      {
+        id: 6,
+        front: "What is Belady's Anomaly and under which algorithmic condition can it occur?",
+        back: "Belady's Anomaly is the counter-intuitive phenomenon where increasing the number of physical page frames results in an increased number of page faults for a reference string. It occurs exclusively in non-stack page replacement algorithms (such as First-In, First-Out).",
+        explanation: "Stack-based algorithms (such as LRU and Optimal MIN) are mathematically immune to Belady's Anomaly because the set of pages in an n-frame cache is always a strict subset of the pages in an (n+1)-frame cache.",
+        topic: "Virtual Memory",
+        difficulty: "hard",
+        tags: ["Belady", "Paging", "FIFO"]
+      }
+    ]
   }
 ];

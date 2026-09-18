@@ -93,6 +93,13 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   const handleSelectOption = useCallback(
     (optionIndex: number) => {
       if (isSubmitted) return;
+      if (
+        mode === 'practice' &&
+        answers[currentIndex]?.selectedOption !== null &&
+        answers[currentIndex]?.selectedOption !== undefined
+      ) {
+        return;
+      }
 
       const currentQ = deck.questions[currentIndex];
       const isCorrect = optionIndex === currentQ.correct_answer;
@@ -124,7 +131,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
         },
       }));
     },
-    [currentIndex, deck.questions, isSubmitted, mode, questionStartTime, streak]
+    [answers, currentIndex, deck.questions, isSubmitted, mode, questionStartTime, streak]
   );
 
   const handleToggleFlag = useCallback(() => {

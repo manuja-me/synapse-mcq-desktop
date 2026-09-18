@@ -16,19 +16,21 @@ import {
   Upload,
   RefreshCw
 } from 'lucide-react';
-import { AppSettings, loadSettings, saveSettings, resetSettings } from '../../utils/settings';
+import { AppSettings, loadSettings, saveSettings, resetSettings, applyTheme } from '../../utils/settings';
 import { McqDeck } from '../../types/mcq';
 import { loadStoredDecks, saveStoredDecks } from '../../utils/storage';
 import { STARTER_DECKS } from '../../utils/sampleDecks';
 import { invokeTrimMemory, invokeGetDataDirectory, invokeOpenDataDirectory } from '../../utils/tauriBridge';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { APP_VERSION } from '../../utils/version';
+import { checkForUpdates } from '../../utils/updater';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSettingsChanged?: (settings: AppSettings) => void;
   onDecksUpdated?: (decks: McqDeck[]) => void;
+  onOpenUpdater?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -36,6 +38,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   onSettingsChanged,
   onDecksUpdated,
+  onOpenUpdater,
 }) => {
   const [settings, setSettings] = useState<AppSettings>(loadSettings());
   const [activeTab, setActiveTab] = useState<'general' | 'gamification' | 'performance' | 'data' | 'about'>('general');
@@ -75,6 +78,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const next = { ...settings, [key]: value };
     setSettings(next);
     saveSettings(next);
+    if (key === 'theme') {
+      applyTheme(value as any);
+    }
     if (onSettingsChanged) onSettingsChanged(next);
     setSaveToast(true);
     setTimeout(() => setSaveToast(false), 1500);
@@ -147,13 +153,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const handleCheckForUpdates = async () => {
     setUpdateStatus('checking');
     try {
-      const response = await fetch('https://api.github.com/repos/manuja-me/synapse-mcq-desktop/releases/latest');
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      const latestTag = data.tag_name || '';
-      setLatestVersion(latestTag);
-      const current = APP_VERSION;
-      if (latestTag && latestTag !== current) {
+      const result = await checkForUpdates();
+      if (result.error && !result.latestRelease) {
+        setUpdateStatus('error');
+        return;
+      }
+      if (result.latestRelease) {
+        setLatestVersion(result.latestRelease.tagName);
+      }
+      if (result.updateAvailable) {
         setUpdateStatus('available');
       } else {
         setUpdateStatus('latest');
@@ -275,6 +283,47 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
 
                 <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between p-3 bg-[#121215] border border-[#27272A]">
+                    <div>
+                      <div className="text-xs font-medium text-zinc-200">Interface Theme</div>
+                      <div className="text-[11px] text-zinc-500">
+                        Select color scheme for workspace and testing interfaces
+                      </div>
+                    </div>
+                    <div className="flex border border-[#27272A]">
+                      <button
+                        onClick={() => updateSetting('theme', 'dark')}
+                        className={`px-3 py-1 text-xs font-mono ${
+                          settings.theme === 'dark'
+                            ? 'bg-[#10B981] text-[#09090B] font-bold'
+                            : 'bg-[#18181B] text-zinc-400 hover:text-zinc-200'
+                        }`}
+                      >
+                        Dark
+                      </button>
+                      <button
+                        onClick={() => updateSetting('theme', 'light')}
+                        className={`px-3 py-1 text-xs font-mono ${
+                          settings.theme === 'light'
+                            ? 'bg-[#10B981] text-[#09090B] font-bold'
+                            : 'bg-[#18181B] text-zinc-400 hover:text-zinc-200'
+                        }`}
+                      >
+                        Light
+                      </button>
+                      <button
+                        onClick={() => updateSetting('theme', 'system')}
+                        className={`px-3 py-1 text-xs font-mono ${
+                          settings.theme === 'system'
+                            ? 'bg-[#10B981] text-[#09090B] font-bold'
+                            : 'bg-[#18181B] text-zinc-400 hover:text-zinc-200'
+                        }`}
+                      >
+                        System
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="flex items-center justify-between p-3 bg-[#121215] border border-[#27272A]">
                     <div>
                       <div className="text-xs font-medium text-zinc-200">Default Test Mode</div>
@@ -645,17 +694,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
 
                   {updateStatus === 'available' && (
-                    <div className="p-2 bg-emerald-950/40 border border-[#10B981] text-xs font-mono flex items-center justify-between">
+                    <div className="p-2.5 bg-emerald-950/40 border border-[#10B981] text-xs font-mono flex items-center justify-between">
                       <span className="text-emerald-300">Upgrade to {latestVersion} (data is preserved automatically)</span>
-                      <a
-                        href="https://github.com/manuja-me/synapse-mcq-desktop/releases/latest"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1 text-[#10B981] underline text-[11px]"
-                      >
-                        <span>Download</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
+                      <div className="flex items-center gap-2">
+                        {onOpenUpdater && (
+                          <button
+                            onClick={() => {
+                              onClose();
+                              onOpenUpdater();
+                            }}
+                            className="px-2.5 py-1 bg-[#10B981] hover:bg-[#059669] text-[#09090B] font-bold text-[11px] transition-colors"
+                          >
+                            Install Now
+                          </button>
+                        )}
+                        <a
+                          href="https://github.com/manuja-me/synapse-mcq-desktop/releases/latest"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1 text-[#10B981] underline text-[11px]"
+                        >
+                          <span>GitHub</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
                     </div>
                   )}
                 </div>

@@ -10,10 +10,23 @@ export interface McqQuestion {
   tags?: string[];
 }
 
+export interface FlashcardItem {
+  id?: string | number;
+  front: string;
+  back: string | string[];
+  explanation?: string;
+  topic?: string;
+  difficulty?: 'easy' | 'medium' | 'hard' | string;
+  tags?: string[];
+}
+
+export type DeckType = 'mcq' | 'flashcard';
+
 export interface DeckMetadata {
   generated_at?: string;
   difficulty?: string;
   total_questions?: number;
+  total_cards?: number;
   target_audience?: string;
   source?: string;
 }
@@ -21,16 +34,24 @@ export interface DeckMetadata {
 export interface McqDeck {
   id: string;
   title: string;
+  deck_type?: DeckType;
   description?: string;
   metadata?: DeckMetadata;
   questions: McqQuestion[];
+  cards?: FlashcardItem[];
   created_at: number;
   last_attempt?: {
     date: number;
     score: number;
     total: number;
     percentage: number;
-    mode: 'practice' | 'exam';
+    mode?: 'practice' | 'exam' | 'flashcard';
+  };
+  flashcard_stats?: {
+    last_studied?: number;
+    mastered_count: number;
+    review_count: number;
+    total_cards: number;
   };
 }
 
@@ -68,4 +89,34 @@ export interface PromptConfig {
   explanationDepth: 'Didactic (Every option analyzed)' | 'Concise Rationale' | 'Key Takeaway Only';
   language: string;
   customDirectives: string;
+  selfContainedQuestions?: boolean; // strictly forbid "look at slide X/page Y"
+  exhaustiveTheory?: boolean;       // maximize theoretical elements from the document
+  preventTopicDuplicates?: boolean; // no duplicate theory topics
+  strictPdfScopeOnly?: boolean;     // strictly bounded to provided PDF scope
 }
+
+export interface FlashcardPromptConfig {
+  cardCount: number;
+  difficulty: 'Balanced' | 'Easy' | 'Medium' | 'Hard';
+  academicLevel: 'High School' | 'Undergraduate' | 'Graduate / Postgrad' | 'Professional Certification';
+  theoryDepth: 'Atomic Definitions & Axioms' | 'Comprehensive & Multi-Part Concepts' | 'Comparative / Differences';
+  language: string;
+  customDirectives: string;
+  exhaustiveTheory?: boolean;       // maximize theoretical elements from the document
+  preventTopicDuplicates?: boolean; // no duplicate theory topics
+  strictPdfScopeOnly?: boolean;     // strictly bounded to provided PDF scope
+}
+
+export interface StudyHistoryEntry {
+  id: string;
+  deckId: string;
+  deckTitle: string;
+  type: 'mcq' | 'flashcard';
+  timestamp: number;
+  score: number;
+  total: number;
+  percentage: number;
+  mode?: 'practice' | 'exam' | 'flashcard';
+  topics?: string[];
+}
+

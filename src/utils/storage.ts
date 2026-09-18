@@ -1,9 +1,10 @@
-import { McqDeck, QuizSessionState } from '../types/mcq';
+import { McqDeck, QuizSessionState, StudyHistoryEntry } from '../types/mcq';
 import { STARTER_DECKS } from './sampleDecks';
 import { invokeLoadPersistentDecks, invokeSavePersistentDecks } from './tauriBridge';
 
 const DECKS_STORAGE_KEY = 'synapse_mcq_decks_v1';
 const RECENT_SESSION_KEY = 'synapse_mcq_recent_session_v1';
+const HISTORY_STORAGE_KEY = 'synapse_mcq_history_v1';
 
 export function loadStoredDecks(): McqDeck[] {
   try {
@@ -79,6 +80,41 @@ export function deleteStoredDeck(deckId: string): McqDeck[] {
   return updated;
 }
 
+export function loadStudyHistory(): StudyHistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as StudyHistoryEntry[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.error('Failed to load study history:', err);
+    return [];
+  }
+}
+
+export function recordStudyHistoryEntry(entry: Omit<StudyHistoryEntry, 'id'>): void {
+  try {
+    const history = loadStudyHistory();
+    const newEntry: StudyHistoryEntry = {
+      ...entry,
+      id: `hist_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    };
+    // Keep 150 most recent entries
+    const updated = [newEntry, ...history].slice(0, 150);
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to record study history entry:', err);
+  }
+}
+
+export function clearStudyHistory(): void {
+  try {
+    localStorage.removeItem(HISTORY_STORAGE_KEY);
+  } catch (err) {
+    console.error('Failed to clear study history:', err);
+  }
+}
+
 export function recordDeckAttempt(
   deckId: string,
   score: number,
@@ -86,6 +122,27 @@ export function recordDeckAttempt(
   mode: 'practice' | 'exam'
 ): McqDeck[] {
   const existing = loadStoredDecks();
+  const matchedDeck = existing.find((d) => d.id === deckId);
+
+  if (matchedDeck) {
+    const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+    const topics = Array.from(
+      new Set(matchedDeck.questions.map((q) => q.topic).filter(Boolean) as string[])
+    );
+
+    recordStudyHistoryEntry({
+      deckId,
+      deckTitle: matchedDeck.title,
+      type: 'mcq',
+      timestamp: Date.now(),
+      score,
+      total,
+      percentage,
+      mode,
+      topics,
+    });
+  }
+
   const updated = existing.map((d) => {
     if (d.id === deckId) {
       return {
@@ -94,8 +151,56 @@ export function recordDeckAttempt(
           date: Date.now(),
           score,
           total,
-          percentage: Math.round((score / total) * 100),
+          percentage: total > 0 ? Math.round((score / total) * 100) : 0,
           mode,
+        },
+      };
+    }
+    return d;
+  });
+  saveStoredDecks(updated);
+  return updated;
+}
+
+export function recordFlashcardStudySession(
+  deckId: string,
+  masteredCount: number,
+  reviewCount: number,
+  totalCards: number
+): McqDeck[] {
+  const existing = loadStoredDecks();
+  const matchedDeck = existing.find((d) => d.id === deckId);
+
+  if (matchedDeck) {
+    const percentage = totalCards > 0 ? Math.round((masteredCount / totalCards) * 100) : 0;
+    const topics = Array.from(
+      new Set(
+        (matchedDeck.cards || []).map((c) => c.topic).filter(Boolean) as string[]
+      )
+    );
+
+    recordStudyHistoryEntry({
+      deckId,
+      deckTitle: matchedDeck.title,
+      type: 'flashcard',
+      timestamp: Date.now(),
+      score: masteredCount,
+      total: totalCards,
+      percentage,
+      mode: 'flashcard',
+      topics,
+    });
+  }
+
+  const updated = existing.map((d) => {
+    if (d.id === deckId) {
+      return {
+        ...d,
+        flashcard_stats: {
+          last_studied: Date.now(),
+          mastered_count: masteredCount,
+          review_count: reviewCount,
+          total_cards: totalCards,
         },
       };
     }

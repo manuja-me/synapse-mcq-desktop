@@ -16,7 +16,7 @@ import {
   Flame,
   Sparkles
 } from 'lucide-react';
-import { McqDeck, UserAnswerRecord } from '../../types/mcq';
+import { McqDeck, McqQuestion, UserAnswerRecord } from '../../types/mcq';
 import { MathText } from '../common/MathText';
 
 interface ResultsDashboardProps {
@@ -95,6 +95,24 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   };
 
   const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+  const getReviewOptionExplanation = (q: McqQuestion, optIdx: number): string | null => {
+    const isRight = optIdx === q.correct_answer;
+    const distractor = q.distractor_explanations?.[optIdx]?.trim();
+    const explanation = q.explanation?.trim();
+
+    if (isRight) {
+      if (explanation) {
+        if (distractor && !/^correct(\s+answer)?\.?$/i.test(distractor) && distractor !== explanation) {
+          return `${distractor} ${explanation}`;
+        }
+        return explanation;
+      }
+      return distractor || 'Correct answer.';
+    }
+
+    return distractor || null;
+  };
 
   const displayedIndices = Array.from({ length: totalQuestions })
     .map((_, i) => i)
@@ -352,6 +370,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                       {q.options.map((opt, optIdx) => {
                         const isChosen = ans?.selectedOption === optIdx;
                         const isRight = optIdx === q.correct_answer;
+                        const explanationText = getReviewOptionExplanation(q, optIdx);
 
                         let optStyle = 'bg-[#18181B] border border-[#27272A] text-zinc-400';
                         if (isRight) {
@@ -363,38 +382,47 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                         return (
                           <div
                             key={optIdx}
-                            className={`p-2.5 text-xs flex items-center justify-between ${optStyle}`}
+                            className={`p-3 text-xs flex items-start justify-between gap-3 ${optStyle}`}
                           >
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono font-bold px-1.5 py-0.5 bg-[#09090B] border border-[#27272A]">
+                            <div className="flex items-start gap-2.5 flex-1">
+                              <span className="font-mono font-bold px-1.5 py-0.5 bg-[#09090B] border border-[#27272A] flex-shrink-0 mt-0.5">
                                 {optionLetters[optIdx]}
                               </span>
-                              <span><MathText text={opt} /></span>
+                              <div className="flex-1 leading-relaxed">
+                                <div className="text-zinc-200">
+                                  <MathText text={opt} />
+                                </div>
+                                {explanationText && (
+                                  <div
+                                    className={`mt-2 pt-1.5 border-t text-[11px] italic leading-relaxed ${
+                                      isRight
+                                        ? 'border-emerald-500/30 text-emerald-300'
+                                        : isChosen
+                                        ? 'border-red-500/30 text-red-300/90'
+                                        : 'border-[#27272A] text-zinc-400'
+                                    }`}
+                                  >
+                                    <MathText text={explanationText} />
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            {isRight && (
-                              <span className="text-[10px] font-mono text-[#10B981] font-bold">
-                                Correct Answer
-                              </span>
-                            )}
-                            {isChosen && !isRight && (
-                              <span className="text-[10px] font-mono text-red-400 font-bold">
-                                Your Choice
-                              </span>
-                            )}
+                            <div className="flex-shrink-0 pt-0.5">
+                              {isRight && (
+                                <span className="text-[10px] font-mono text-[#10B981] font-bold">
+                                  Correct Answer
+                                </span>
+                              )}
+                              {isChosen && !isRight && (
+                                <span className="text-[10px] font-mono text-red-400 font-bold">
+                                  Your Choice
+                                </span>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
                     </div>
-
-                    {/* Explanations */}
-                    {q.explanation && (
-                      <div className="p-3 bg-[#09090B] border border-[#27272A] text-xs text-zinc-300 leading-relaxed font-mono">
-                        <div className="font-semibold text-[#10B981] text-[11px] mb-1">
-                          Rationale:
-                        </div>
-                        <MathText text={q.explanation} />
-                      </div>
-                    )}
                   </div>
                 )}
               </div>

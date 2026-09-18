@@ -1,17 +1,25 @@
 import React from 'react';
-import { Minus, Square, X, Cpu, Sparkles, Command } from 'lucide-react';
+import { Minus, Square, X, Cpu, Sparkles, Command, Sun, Moon, ArrowUpCircle } from 'lucide-react';
 import { minimizeWindow, toggleMaximizeWindow, closeWindow } from '../../utils/tauriBridge';
 
 interface TitleBarProps {
   activeDeckTitle?: string;
   onOpenCommandPalette: () => void;
   onTrimMemory: () => void;
+  theme?: 'dark' | 'light' | 'system';
+  onToggleTheme?: () => void;
+  updateAvailable?: boolean;
+  onOpenUpdater?: () => void;
 }
 
 export const TitleBar: React.FC<TitleBarProps> = ({
   activeDeckTitle,
   onOpenCommandPalette,
   onTrimMemory,
+  theme = 'dark',
+  onToggleTheme,
+  updateAvailable = false,
+  onOpenUpdater,
 }) => {
   return (
     <header className="h-10 w-full bg-[#09090B] border-b border-[#27272A] flex items-center justify-between select-none z-50 fixed top-0 left-0 right-0">
@@ -52,8 +60,41 @@ export const TitleBar: React.FC<TitleBarProps> = ({
         </button>
       </div>
 
-      {/* Right: RAM Trim & Window Controls */}
-      <div data-tauri-drag-region="false" className="flex items-center h-full">
+      {/* Right: Actions, Theme Toggle, RAM Trim & Window Controls */}
+      <div data-tauri-drag-region="false" className="flex items-center h-full gap-1.5 pr-1">
+        {updateAvailable && onOpenUpdater && (
+          <button
+            data-tauri-drag-region="false"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenUpdater();
+            }}
+            title="New software version available on GitHub"
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 border border-[#10B981] text-[#10B981] text-[10px] font-mono font-bold transition-colors animate-pulse"
+          >
+            <ArrowUpCircle className="w-3.5 h-3.5 text-[#10B981]" />
+            <span>UPDATE</span>
+          </button>
+        )}
+
+        {onToggleTheme && (
+          <button
+            data-tauri-drag-region="false"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleTheme();
+            }}
+            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            className="flex items-center justify-center w-7 h-7 bg-[#121215] border border-[#27272A] hover:border-[#10B981]/50 text-zinc-300 hover:text-[#10B981] transition-colors"
+          >
+            {theme === 'light' ? (
+              <Moon className="w-3.5 h-3.5" />
+            ) : (
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
+            )}
+          </button>
+        )}
+
         <button
           data-tauri-drag-region="false"
           onClick={(e) => {
@@ -61,7 +102,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({
             onTrimMemory();
           }}
           title="Active RAM Memory Flush (Win32 Working-Set Trim)"
-          className="flex items-center gap-1.5 px-2.5 py-1 mr-2 bg-[#121215] border border-[#27272A] hover:border-[#10B981]/50 text-[#10B981] text-[10px] font-mono transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1 bg-[#121215] border border-[#27272A] hover:border-[#10B981]/50 text-[#10B981] text-[10px] font-mono transition-colors"
         >
           <Cpu className="w-3 h-3 animate-pulse" />
           <span className="hidden sm:inline">RAM TRIM</span>

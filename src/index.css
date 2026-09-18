@@ -192,3 +192,150 @@
   transform: scale(0.988);
 }
 
+/* 3D Hardware Accelerated Flashcard Flip */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* ==================== HIGH-CONTRAST LIGHT MODE ==================== */
+html.light body {
+  background-color: #F8F9FA !important;
+  color: #09090B !important;
+}
+
+html.light .bg-\[\#09090B\] {
+  background-color: #F8F9FA !important;
+}
+
+html.light .bg-\[\#0C0C0E\] {
+  background-color: #F0F1F4 !important;
+}
+
+html.light .bg-\[\#121215\] {
+  background-color: #FFFFFF !important;
+}
+
+html.light .bg-\[\#18181B\] {
+  background-color: #F4F4F6 !important;
+}
+
+html.light .bg-\[\#18181B\]\/80 {
+  background-color: rgba(244, 244, 246, 0.88) !important;
+}
+
+html.light .bg-\[\#18181B\]\/60 {
+  background-color: rgba(244, 244, 246, 0.7) !important;
+}
+
+html.light .bg-\[\#18181B\]\/50 {
+  background-color: rgba(244, 244, 246, 0.55) !important;
+}
+
+html.light .bg-\[\#0A0A0C\] {
+  background-color: #E8EAED !important;
+}
+
+html.light .border-\[\#27272A\] {
+  border-color: #E2E4E8 !important;
+}
+
+html.light .border-\[\#3F3F46\] {
+  border-color: #CBD0D8 !important;
+}
+
+html.light .border-\[\#27272A\]\/80 {
+  border-color: rgba(226, 228, 232, 0.8) !important;
+}
+
+html.light .border-\[\#27272A\]\/70 {
+  border-color: rgba(226, 228, 232, 0.7) !important;
+}
+
+html.light .border-\[\#27272A\]\/50 {
+  border-color: rgba(226, 228, 232, 0.5) !important;
+}
+
+html.light .text-zinc-100 {
+  color: #09090B !important;
+}
+
+html.light .text-zinc-200 {
+  color: #18181B !important;
+}
+
+html.light .text-zinc-300 {
+  color: #27272A !important;
+}
+
+html.light .text-zinc-400 {
+  color: #52525B !important;
+}
+
+html.light .text-zinc-500 {
+  color: #71717A !important;
+}
+
+html.light .text-white {
+  color: #09090B !important;
+}
+
+html.light input,
+html.light textarea,
+html.light select {
+  background-color: #FFFFFF !important;
+  color: #09090B !important;
+  border-color: #E2E4E8 !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #71717A !important;
+}
+
+html.light .hover\:bg-\[\#18181B\]:hover {
+  background-color: #EBECEF !important;
+}
+
+html.light .hover\:bg-\[\#27272A\]:hover {
+  background-color: #E2E4E8 !important;
+}
+
+html.light .hover\:text-zinc-100:hover,
+html.light .hover\:text-zinc-200:hover,
+html.light .hover\:text-white:hover {
+  color: #000000 !important;
+}
+
+html.light .minimal-panel,
+html.light .minimal-card,
+html.light .glass-panel,
+html.light .glass-card {
+  background: #FFFFFF !important;
+  border-color: #E2E4E8 !important;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #F8F9FA !important;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #D4D4D8 !important;
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #10B981 !important;
+}
+

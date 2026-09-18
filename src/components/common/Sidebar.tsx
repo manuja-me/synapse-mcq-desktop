@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Sparkles,
   BookOpen,
@@ -9,23 +8,31 @@ import {
   Layers,
   LogOut,
   ShieldCheck,
-  Check
+  Check,
+  BarChart3,
+  Sun,
+  Moon,
+  ArrowUpCircle
 } from 'lucide-react';
 import { McqDeck } from '../../types/mcq';
 import { APP_VERSION } from '../../utils/version';
 
 interface SidebarProps {
-  activeTab: 'studio' | 'library' | 'import';
-  onSelectTab: (tab: 'studio' | 'library' | 'import') => void;
+  activeTab: 'studio' | 'library' | 'import' | 'analytics';
+  onSelectTab: (tab: 'studio' | 'library' | 'import' | 'analytics') => void;
   deckCount: number;
   activeQuiz: {
     deck: McqDeck;
-    mode: 'practice' | 'exam';
+    mode: 'practice' | 'exam' | 'flashcard';
   } | null;
   onExitQuiz?: () => void;
   onOpenSettings: () => void;
   onTrimMemory: () => void;
   isTrimming?: boolean;
+  theme?: 'dark' | 'light' | 'system';
+  onToggleTheme?: () => void;
+  updateAvailable?: boolean;
+  onOpenUpdater?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -37,6 +44,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenSettings,
   onTrimMemory,
   isTrimming = false,
+  theme = 'dark',
+  onToggleTheme,
+  updateAvailable = false,
+  onOpenUpdater,
 }) => {
   return (
     <aside className="w-56 sm:w-60 h-[calc(100vh-2.5rem)] bg-[#0C0C0E] border-r border-[#27272A] flex flex-col justify-between select-none flex-shrink-0">
@@ -113,15 +124,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span>Ingest JSON</span>
             </div>
           </button>
+
+          <button
+            onClick={() => onSelectTab('analytics')}
+            className={`w-full flex items-center justify-between px-3 py-2.5 transition-colors text-left border ${
+              activeTab === 'analytics' && !activeQuiz
+                ? 'bg-[#10B981] text-[#09090B] font-bold border-[#10B981]'
+                : 'bg-[#121215] text-zinc-400 hover:text-zinc-100 hover:bg-[#18181B] border-[#27272A]'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <BarChart3 className="w-4 h-4" />
+              <span>Analytics</span>
+            </div>
+          </button>
         </nav>
 
-        {/* Active Quiz Card indicator in Sidebar */}
+        {/* Active Quiz or Flashcard Card indicator in Sidebar */}
         {activeQuiz && (
           <div className="p-3 bg-[#121215] border border-[#10B981]/60 space-y-2 mt-4 animate-in fade-in">
             <div className="flex items-center justify-between text-[10px] font-mono uppercase text-[#10B981]">
               <span className="flex items-center gap-1.5 font-bold">
                 <span className="w-2 h-2 bg-[#10B981] inline-block animate-pulse"></span>
-                ACTIVE TEST
+                {activeQuiz.mode === 'flashcard' ? 'STUDY SESSION' : 'ACTIVE TEST'}
               </span>
               <span className="px-1 bg-[#18181B] border border-[#27272A] text-zinc-400 uppercase">
                 {activeQuiz.mode}
@@ -131,7 +156,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {activeQuiz.deck.title}
             </div>
             <div className="text-[11px] text-zinc-400 font-mono">
-              {activeQuiz.deck.questions.length} Questions
+              {activeQuiz.mode === 'flashcard'
+                ? `${activeQuiz.deck.cards?.length || 0} Theory Cards`
+                : `${activeQuiz.deck.questions.length} Questions`}
             </div>
             {onExitQuiz && (
               <button
@@ -139,15 +166,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-[#18181B] hover:bg-red-950/40 border border-[#27272A] hover:border-red-800/60 text-zinc-400 hover:text-red-300 text-xs font-mono transition-colors"
               >
                 <LogOut className="w-3 h-3" />
-                <span>Exit Test</span>
+                <span>{activeQuiz.mode === 'flashcard' ? 'Exit Study' : 'Exit Test'}</span>
               </button>
             )}
           </div>
         )}
       </div>
 
-      {/* Bottom Section: Settings & System Controls */}
+      {/* Bottom Section: Settings, Theme, Updates & System Controls */}
       <div className="p-3 border-t border-[#27272A] bg-[#0A0A0C] space-y-2">
+        {/* Update Notification Tile */}
+        {updateAvailable && onOpenUpdater && (
+          <button
+            onClick={onOpenUpdater}
+            className="w-full flex items-center justify-between px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-[#10B981] text-[#10B981] text-xs font-mono font-bold transition-colors animate-pulse"
+          >
+            <div className="flex items-center gap-2">
+              <ArrowUpCircle className="w-3.5 h-3.5" />
+              <span>Update Ready</span>
+            </div>
+            <span className="text-[10px] px-1.5 py-0.2 bg-[#10B981] text-black">NEW</span>
+          </button>
+        )}
+
+        {/* Theme Toggle Button */}
+        {onToggleTheme && (
+          <button
+            onClick={onToggleTheme}
+            className="w-full flex items-center justify-between px-3 py-1.5 bg-[#121215] hover:bg-[#18181B] border border-[#27272A] text-zinc-300 hover:text-white text-xs font-mono transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              {theme === 'light' ? (
+                <Moon className="w-3.5 h-3.5 text-zinc-400" />
+              ) : (
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+              )}
+              <span>{theme === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
+            </div>
+            <span className="text-[10px] text-zinc-500 font-mono uppercase">
+              {theme === 'light' ? 'Light' : 'Dark'}
+            </span>
+          </button>
+        )}
+
         {/* Centralized Settings Button */}
         <button
           onClick={onOpenSettings}

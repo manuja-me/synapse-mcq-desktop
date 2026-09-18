@@ -345,6 +345,53 @@ fn save_persistent_settings(app: tauri::AppHandle, json_content: String) -> Resu
     Ok(true)
 }
 
+#[tauri::command]
+fn install_github_update(download_url: String, filename: String) -> Result<bool, String> {
+    #[cfg(target_os = "windows")]
+    {
+        let temp_dir = std::env::temp_dir();
+        let target_path = temp_dir.join(&filename);
+        let target_str = target_path.to_string_lossy().to_string();
+
+        // Download via powershell WebClient with TLS 1.2
+        let dl_cmd = format!(
+            "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object System.Net.WebClient).DownloadFile('{}', '{}')",
+            download_url, target_str
+        );
+
+        let status = std::process::Command::new("powershell")
+            .args(&["-NoProfile", "-NonInteractive", "-Command", &dl_cmd])
+            .status()
+            .map_err(|e| format!("Failed to execute download transfer: {}", e))?;
+
+        if !status.success() {
+            return Err("Download process exited with an error".to_string());
+        }
+
+        if filename.ends_with(".msi") {
+            let _ = std::process::Command::new("msiexec")
+                .args(&["/i", &target_str])
+                .spawn()
+                .map_err(|e| format!("Failed to launch MSI installer: {}", e))?;
+        } else if filename.ends_with(".exe") {
+            let _ = std::process::Command::new(&target_str)
+                .spawn()
+                .map_err(|e| format!("Failed to launch executable installer: {}", e))?;
+        } else {
+            let _ = std::process::Command::new("explorer")
+                .args(&["/select,", &target_str])
+                .spawn();
+        }
+
+        Ok(true)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = (download_url, filename);
+        Err("Automated installer execution is currently supported on Windows".to_string())
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -369,7 +416,8 @@ pub fn run() {
             load_persistent_decks,
             save_persistent_decks,
             load_persistent_settings,
-            save_persistent_settings
+            save_persistent_settings,
+            install_github_update
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
