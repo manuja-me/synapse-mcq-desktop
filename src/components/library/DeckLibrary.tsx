@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { McqDeck } from '../../types/mcq';
 import { deleteStoredDeck } from '../../utils/storage';
+import { ConfirmModal } from '../common/ConfirmModal';
 
 interface DeckLibraryProps {
   decks: McqDeck[];
@@ -44,12 +45,18 @@ export const DeckLibrary: React.FC<DeckLibraryProps> = ({
     return matchesSearch && matchesDiff;
   });
 
-  const handleDelete = (e: React.MouseEvent, deckId: string) => {
+  const [deckPendingDelete, setDeckPendingDelete] = useState<McqDeck | null>(null);
+
+  const handleDeleteRequest = (e: React.MouseEvent, deck: McqDeck) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to remove this deck from your library?')) {
-      const updated = deleteStoredDeck(deckId);
-      onDecksUpdated(updated);
-    }
+    setDeckPendingDelete(deck);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deckPendingDelete) return;
+    const updated = deleteStoredDeck(deckPendingDelete.id);
+    onDecksUpdated(updated);
+    setDeckPendingDelete(null);
   };
 
   const handleExport = (e: React.MouseEvent, deck: McqDeck) => {
@@ -158,7 +165,7 @@ export const DeckLibrary: React.FC<DeckLibraryProps> = ({
                         <Download className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={(e) => handleDelete(e, deck.id)}
+                        onClick={(e) => handleDeleteRequest(e, deck)}
                         title="Delete deck"
                         className="p-1 text-zinc-400 hover:text-red-400 hover:bg-[#27272A] transition-colors"
                       >
@@ -255,6 +262,44 @@ export const DeckLibrary: React.FC<DeckLibraryProps> = ({
           })}
         </div>
       )}
+
+      {/* Native Desktop Style Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deckPendingDelete}
+        title="Remove Question Deck"
+        subtitle="Permanent Deletion"
+        icon="trash"
+        variant="danger"
+        confirmLabel="Yes, Delete Deck"
+        cancelLabel="Keep Deck"
+        onCancel={() => setDeckPendingDelete(null)}
+        onConfirm={handleConfirmDelete}
+        message="Are you sure you want to remove this deck from your library? This action will permanently remove all questions and past performance history from local offline storage."
+        details={
+          deckPendingDelete ? (
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-zinc-500">Deck:</span>
+                <span className="text-zinc-200 font-bold truncate text-right">{deckPendingDelete.title}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500">Total Questions:</span>
+                <span className="text-[#10B981] font-bold">{deckPendingDelete.questions.length} MCQs</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500">Difficulty:</span>
+                <span className="text-zinc-400">{deckPendingDelete.metadata?.difficulty || 'Mixed'}</span>
+              </div>
+              {deckPendingDelete.last_attempt && (
+                <div className="flex justify-between items-center text-amber-400">
+                  <span className="text-zinc-500">Best Score:</span>
+                  <span>{deckPendingDelete.last_attempt.percentage}% ({deckPendingDelete.last_attempt.score}/{deckPendingDelete.last_attempt.total})</span>
+                </div>
+              )}
+            </div>
+          ) : null
+        }
+      />
     </div>
   );
 };

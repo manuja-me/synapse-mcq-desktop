@@ -15,6 +15,7 @@ import { PaletteGrid } from './PaletteGrid';
 import { ResultsDashboard } from '../analytics/ResultsDashboard';
 import { recordDeckAttempt } from '../../utils/storage';
 import { invokeTrimMemory } from '../../utils/tauriBridge';
+import { ConfirmModal } from '../common/ConfirmModal';
 
 interface QuizContainerProps {
   deck: McqDeck;
@@ -37,6 +38,15 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
     return deck.questions.length * 90;
   });
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+
+  const handleExitClick = () => {
+    if (!isSubmitted && Object.keys(answers).length > 0) {
+      setShowExitModal(true);
+    } else {
+      onExitQuiz();
+    }
+  };
 
   // Timer effect
   useEffect(() => {
@@ -199,7 +209,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
         {/* Left: Exit & Mode info */}
         <div className="flex items-center gap-3">
           <button
-            onClick={onExitQuiz}
+            onClick={handleExitClick}
             className="p-2 bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-zinc-400 hover:text-zinc-200 transition-colors"
             title="Exit to Library"
           >
@@ -376,6 +386,32 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
           </div>
         </div>
       )}
+
+      {/* Active Session Exit Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showExitModal}
+        title="Exit Active Session?"
+        subtitle="Unsaved Test Progress"
+        icon="logout"
+        variant="warning"
+        confirmLabel="Exit to Library"
+        cancelLabel="Continue Quiz"
+        onCancel={() => setShowExitModal(false)}
+        onConfirm={onExitQuiz}
+        message="You have an active quiz session in progress. Exiting now will discard your answered questions and timer progress."
+        details={
+          <div className="space-y-1">
+            <div className="flex justify-between">
+              <span className="text-zinc-500">Answered:</span>
+              <span className="text-[#10B981] font-bold">{Object.keys(answers).length} / {deck.questions.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-zinc-500">Time Elapsed:</span>
+              <span className="text-zinc-300 font-bold">{formatTimer(elapsedSeconds)}</span>
+            </div>
+          </div>
+        }
+      />
     </div>
   );
 };
