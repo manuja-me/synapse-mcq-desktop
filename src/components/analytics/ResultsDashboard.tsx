@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { McqDeck, UserAnswerRecord } from '../../types/mcq';
 import { MathText } from '../common/MathText';
-import { audioFx } from '../../utils/audioFx';
 
 interface ResultsDashboardProps {
   deck: McqDeck;
@@ -66,9 +65,8 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
   const avgSeconds = totalQuestions > 0 ? Math.round(elapsedSeconds / totalQuestions) : 0;
 
-  // Trigger celebration victory sound and confetti on high score
+  // Trigger celebration confetti on high score
   useEffect(() => {
-    audioFx.playVictory();
     if (scorePercentage >= 80) {
       confetti({
         particleCount: 80,

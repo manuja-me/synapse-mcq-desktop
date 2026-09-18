@@ -8,8 +8,6 @@ import {
   RotateCcw,
   Sparkles,
   AlertCircle,
-  Volume2,
-  VolumeX,
   Flame,
   Zap
 } from 'lucide-react';
@@ -20,7 +18,6 @@ import { ResultsDashboard } from '../analytics/ResultsDashboard';
 import { recordDeckAttempt } from '../../utils/storage';
 import { invokeTrimMemory } from '../../utils/tauriBridge';
 import { ConfirmModal } from '../common/ConfirmModal';
-import { audioFx } from '../../utils/audioFx';
 import {
   calculateReward,
   getStreakBadgeConfig,
@@ -56,21 +53,12 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   const [maxStreak, setMaxStreak] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
   const [recentReward, setRecentReward] = useState<RewardResult | null>(null);
-  const [isMuted, setIsMuted] = useState(() => audioFx.isMuted());
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
 
   // Track start time for speed bonuses per question
   useEffect(() => {
     setQuestionStartTime(Date.now());
   }, [currentIndex]);
-
-  const handleToggleSound = useCallback(() => {
-    const nextMuted = audioFx.toggleMute();
-    setIsMuted(nextMuted);
-    if (!nextMuted) {
-      audioFx.playTick();
-    }
-  }, []);
 
   const handleExitClick = () => {
     if (!isSubmitted && Object.keys(answers).length > 0) {
@@ -120,18 +108,9 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
           setMaxStreak((prev) => Math.max(prev, nextStreak));
           setTotalScore((prev) => prev + reward.pointsEarned);
 
-          if (reward.milestoneReached) {
-            audioFx.playStreakMilestone();
-          } else {
-            audioFx.playCorrect(nextStreak);
-          }
         } else {
           setStreak(0);
-          audioFx.playWrong();
         }
-      } else {
-        // In exam mode, selection is recorded and tick feedback given
-        audioFx.playTick();
       }
 
       setAnswers((prev) => ({
@@ -149,7 +128,6 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   );
 
   const handleToggleFlag = useCallback(() => {
-    audioFx.playTick();
     setAnswers((prev) => ({
       ...prev,
       [currentIndex]: {
@@ -165,7 +143,6 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   const handleNext = useCallback(() => {
     if (currentIndex < deck.questions.length - 1) {
       setDirection('forward');
-      audioFx.playTick();
       setCurrentIndex((prev) => prev + 1);
     }
   }, [currentIndex, deck.questions.length]);
@@ -173,7 +150,6 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   const handlePrev = useCallback(() => {
     if (currentIndex > 0) {
       setDirection('backward');
-      audioFx.playTick();
       setCurrentIndex((prev) => prev - 1);
     }
   }, [currentIndex]);
@@ -182,7 +158,6 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
     (targetIndex: number) => {
       if (targetIndex !== currentIndex) {
         setDirection(targetIndex > currentIndex ? 'forward' : 'backward');
-        audioFx.playTick();
         setCurrentIndex(targetIndex);
       }
     },
@@ -218,8 +193,6 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
       }
       // Flag key
       else if (key === 'f') handleToggleFlag();
-      // Audio mute toggle
-      else if (key === 'm') handleToggleSound();
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -229,7 +202,6 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
     handleNext,
     handlePrev,
     handleToggleFlag,
-    handleToggleSound,
     isSubmitted,
     showSubmitModal,
     showExitModal,
@@ -403,21 +375,8 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
           </div>
         </div>
 
-        {/* Right: Sound & Submit Controls */}
+        {/* Right: Submit Controls */}
         <div className="flex items-center gap-2">
-          {/* Sound Mute Toggle Button */}
-          <button
-            onClick={handleToggleSound}
-            className="p-2 bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-zinc-400 hover:text-zinc-200 transition-colors snappy-press"
-            title={isMuted ? 'Unmute sound effects (M)' : 'Mute sound effects (M)'}
-          >
-            {isMuted ? (
-              <VolumeX className="w-4 h-4 text-zinc-500" />
-            ) : (
-              <Volume2 className="w-4 h-4 text-[#10B981]" />
-            )}
-          </button>
-
           {/* Submit Button */}
           <button
             onClick={() => setShowSubmitModal(true)}
@@ -482,7 +441,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
               </span>
               <span>•</span>
               <span>
-                <kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">M</kbd> MUTE
+                <kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">F</kbd> FLAG
               </span>
             </div>
 
