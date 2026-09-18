@@ -12,16 +12,21 @@ import {
   ChevronUp,
   Filter,
   BarChart3,
-  Layers
+  Layers,
+  Flame,
+  Sparkles
 } from 'lucide-react';
 import { McqDeck, UserAnswerRecord } from '../../types/mcq';
 import { MathText } from '../common/MathText';
+import { audioFx } from '../../utils/audioFx';
 
 interface ResultsDashboardProps {
   deck: McqDeck;
   answers: Record<number, UserAnswerRecord>;
   elapsedSeconds: number;
   mode: 'practice' | 'exam';
+  totalScore?: number;
+  maxStreak?: number;
   onRetakeQuiz: (mode: 'practice' | 'exam') => void;
   onRetakeMissedOnly: (missedQuestions: number[]) => void;
   onBackToLibrary: () => void;
@@ -32,6 +37,8 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   answers,
   elapsedSeconds,
   mode,
+  totalScore,
+  maxStreak,
   onRetakeQuiz,
   onRetakeMissedOnly,
   onBackToLibrary,
@@ -59,8 +66,9 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
   const avgSeconds = totalQuestions > 0 ? Math.round(elapsedSeconds / totalQuestions) : 0;
 
-  // Trigger celebration confetti on high score
+  // Trigger celebration victory sound and confetti on high score
   useEffect(() => {
+    audioFx.playVictory();
     if (scorePercentage >= 80) {
       confetti({
         particleCount: 80,
@@ -119,7 +127,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
           {/* Large Score Indicator (Square Pointed) */}
           <div className="flex flex-col items-center">
             <div
-              className={`w-28 h-28 border-2 flex flex-col items-center justify-center ${
+              className={`w-32 h-24 border flex flex-col items-center justify-center ${
                 scorePercentage >= 80
                   ? 'border-[#10B981] bg-[#10B981]/10 text-[#10B981]'
                   : scorePercentage >= 60
@@ -135,12 +143,27 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
           </div>
         </div>
 
-        {/* Quick Metrics Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-[#27272A]">
+        {/* Quick Metrics Bar with Gamification Rewards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 mt-6 pt-6 border-t border-[#27272A]">
           <div className="p-3 bg-[#18181B] border border-[#27272A] text-center">
             <div className="text-[10px] font-mono text-zinc-500 uppercase">Correct</div>
             <div className="text-xl font-bold text-[#10B981] font-mono mt-0.5">
               {correctCount} / {totalQuestions}
+            </div>
+          </div>
+
+          <div className="p-3 bg-[#18181B] border border-[#27272A] text-center">
+            <div className="text-[10px] font-mono text-zinc-500 uppercase">Total XP / Score</div>
+            <div className="text-xl font-bold text-cyan-400 font-mono mt-0.5">
+              {totalScore ?? (correctCount * 100)} <span className="text-[10px] font-normal text-zinc-400">PTS</span>
+            </div>
+          </div>
+
+          <div className="p-3 bg-[#18181B] border border-[#27272A] text-center">
+            <div className="text-[10px] font-mono text-zinc-500 uppercase">Max Streak</div>
+            <div className="text-xl font-bold text-orange-400 font-mono mt-0.5 flex items-center justify-center gap-1">
+              <Flame className="w-4 h-4 text-orange-400" />
+              <span>{maxStreak ?? (correctCount > 0 ? 1 : 0)}x</span>
             </div>
           </div>
 

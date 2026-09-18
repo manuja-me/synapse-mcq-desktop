@@ -100,3 +100,95 @@
 .katex-display {
   margin: 0.5em 0 !important;
 }
+
+/* Fluid Snappy Transitions & Reward Animations */
+@keyframes slideInRight {
+  from {
+    transform: translate3d(18px, 0, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translate3d(-18px, 0, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes rewardBounce {
+  0% {
+    transform: scale(0.85) translate3d(0, 6px, 0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.05) translate3d(0, -2px, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes borderGlowPulse {
+  0%, 100% {
+    border-color: #10B981;
+    box-shadow: 0 0 0px transparent;
+  }
+  50% {
+    border-color: #34D399;
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.4);
+  }
+}
+
+@keyframes streakFire {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.18);
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6));
+  }
+}
+
+.animate-slide-right {
+  animation: slideInRight 140ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-slide-left {
+  animation: slideInLeft 140ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-reward-bounce {
+  animation: rewardBounce 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-glow-pulse {
+  animation: borderGlowPulse 1.4s ease-in-out infinite;
+}
+
+.animate-streak-fire {
+  animation: streakFire 0.75s ease-in-out infinite;
+}
+
+.snappy-press {
+  transition: transform 70ms cubic-bezier(0.16, 1, 0.3, 1), background-color 90ms ease, border-color 90ms ease;
+  will-change: transform;
+}
+
+.snappy-press:active {
+  transform: scale(0.988);
+}
+

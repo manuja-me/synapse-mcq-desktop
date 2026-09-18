@@ -55,7 +55,7 @@ export const PaletteGrid: React.FC<PaletteGridProps> = ({
             <button
               key={i}
               onClick={() => onJumpToQuestion(i)}
-              className={`h-8 text-xs font-mono font-medium flex items-center justify-center relative transition-colors ${btnStyle}`}
+              className={`h-8 text-xs font-mono font-medium flex items-center justify-center relative transition-colors snappy-press ${btnStyle}`}
             >
               <span>{i + 1}</span>
               {isFlagged && !isCurrent && (

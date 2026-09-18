@@ -7,7 +7,11 @@ import {
   Flag,
   RotateCcw,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Volume2,
+  VolumeX,
+  Flame,
+  Zap
 } from 'lucide-react';
 import { McqDeck, UserAnswerRecord } from '../../types/mcq';
 import { QuestionCard } from './QuestionCard';
@@ -16,6 +20,12 @@ import { ResultsDashboard } from '../analytics/ResultsDashboard';
 import { recordDeckAttempt } from '../../utils/storage';
 import { invokeTrimMemory } from '../../utils/tauriBridge';
 import { ConfirmModal } from '../common/ConfirmModal';
+import { audioFx } from '../../utils/audioFx';
+import {
+  calculateReward,
+  getStreakBadgeConfig,
+  RewardResult
+} from '../../utils/rewardEngine';
 
 interface QuizContainerProps {
   deck: McqDeck;
@@ -30,6 +40,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
 }) => {
   const [mode, setMode] = useState<'practice' | 'exam'>(initialMode);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
   const [answers, setAnswers] = useState<Record<number, UserAnswerRecord>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -39,6 +50,27 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   });
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+
+  // Gamification & Reward State
+  const [streak, setStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
+  const [totalScore, setTotalScore] = useState(0);
+  const [recentReward, setRecentReward] = useState<RewardResult | null>(null);
+  const [isMuted, setIsMuted] = useState(() => audioFx.isMuted());
+  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
+
+  // Track start time for speed bonuses per question
+  useEffect(() => {
+    setQuestionStartTime(Date.now());
+  }, [currentIndex]);
+
+  const handleToggleSound = useCallback(() => {
+    const nextMuted = audioFx.toggleMute();
+    setIsMuted(nextMuted);
+    if (!nextMuted) {
+      audioFx.playTick();
+    }
+  }, []);
 
   const handleExitClick = () => {
     if (!isSubmitted && Object.keys(answers).length > 0) {
@@ -76,6 +108,31 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
 
       const currentQ = deck.questions[currentIndex];
       const isCorrect = optionIndex === currentQ.correct_answer;
+      const timeSpentSeconds = Math.max(1, Math.round((Date.now() - questionStartTime) / 1000));
+
+      if (mode === 'practice') {
+        const reward = calculateReward(isCorrect, streak, timeSpentSeconds);
+        setRecentReward(reward);
+
+        if (isCorrect) {
+          const nextStreak = reward.newStreak;
+          setStreak(nextStreak);
+          setMaxStreak((prev) => Math.max(prev, nextStreak));
+          setTotalScore((prev) => prev + reward.pointsEarned);
+
+          if (reward.milestoneReached) {
+            audioFx.playStreakMilestone();
+          } else {
+            audioFx.playCorrect(nextStreak);
+          }
+        } else {
+          setStreak(0);
+          audioFx.playWrong();
+        }
+      } else {
+        // In exam mode, selection is recorded and tick feedback given
+        audioFx.playTick();
+      }
 
       setAnswers((prev) => ({
         ...prev,
@@ -83,15 +140,16 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
           questionIndex: currentIndex,
           selectedOption: optionIndex,
           isCorrect,
-          timeSpentSeconds: 0,
+          timeSpentSeconds,
           flaggedForReview: prev[currentIndex]?.flaggedForReview ?? false,
         },
       }));
     },
-    [currentIndex, deck.questions, isSubmitted]
+    [currentIndex, deck.questions, isSubmitted, mode, questionStartTime, streak]
   );
 
   const handleToggleFlag = useCallback(() => {
+    audioFx.playTick();
     setAnswers((prev) => ({
       ...prev,
       [currentIndex]: {
@@ -106,20 +164,35 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
 
   const handleNext = useCallback(() => {
     if (currentIndex < deck.questions.length - 1) {
+      setDirection('forward');
+      audioFx.playTick();
       setCurrentIndex((prev) => prev + 1);
     }
   }, [currentIndex, deck.questions.length]);
 
   const handlePrev = useCallback(() => {
     if (currentIndex > 0) {
+      setDirection('backward');
+      audioFx.playTick();
       setCurrentIndex((prev) => prev - 1);
     }
   }, [currentIndex]);
 
+  const handleJumpToQuestion = useCallback(
+    (targetIndex: number) => {
+      if (targetIndex !== currentIndex) {
+        setDirection(targetIndex > currentIndex ? 'forward' : 'backward');
+        audioFx.playTick();
+        setCurrentIndex(targetIndex);
+      }
+    },
+    [currentIndex]
+  );
+
   // Keyboard Shortcuts Handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isSubmitted || showSubmitModal) return;
+      if (isSubmitted || showSubmitModal || showExitModal) return;
 
       // Ignore inside text inputs
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
@@ -127,29 +200,70 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
       }
 
       const key = e.key.toLowerCase();
+
+      // Option selection keys
       if (key === '1' || key === 'a') handleSelectOption(0);
       else if (key === '2' || key === 'b') handleSelectOption(1);
       else if (key === '3' || key === 'c') handleSelectOption(2);
       else if (key === '4' || key === 'd') handleSelectOption(3);
-      else if (key === 'arrowright') handleNext();
-      else if (key === 'arrowleft') handlePrev();
+      // Navigation keys
+      else if (key === 'arrowright' || key === 'j') handleNext();
+      else if (key === 'arrowleft' || key === 'k') handlePrev();
+      // Space / Enter quick advance
+      else if (key === ' ' || key === 'enter') {
+        if (answers[currentIndex]?.selectedOption !== null && currentIndex < deck.questions.length - 1) {
+          e.preventDefault();
+          handleNext();
+        }
+      }
+      // Flag key
       else if (key === 'f') handleToggleFlag();
+      // Audio mute toggle
+      else if (key === 'm') handleToggleSound();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSelectOption, handleNext, handlePrev, handleToggleFlag, isSubmitted, showSubmitModal]);
+  }, [
+    handleSelectOption,
+    handleNext,
+    handlePrev,
+    handleToggleFlag,
+    handleToggleSound,
+    isSubmitted,
+    showSubmitModal,
+    showExitModal,
+    answers,
+    currentIndex,
+    deck.questions.length
+  ]);
 
   const handleSubmitQuiz = () => {
     setShowSubmitModal(false);
     setIsSubmitted(true);
 
     let correct = 0;
+    let computedStreak = 0;
+    let computedMaxStreak = 0;
+    let computedScore = 0;
+
     deck.questions.forEach((q, idx) => {
-      if (answers[idx]?.selectedOption === q.correct_answer) {
+      const ans = answers[idx];
+      if (ans?.selectedOption === q.correct_answer) {
         correct++;
+        computedStreak++;
+        computedMaxStreak = Math.max(computedMaxStreak, computedStreak);
+        const reward = calculateReward(true, computedStreak - 1, ans.timeSpentSeconds);
+        computedScore += reward.pointsEarned;
+      } else {
+        computedStreak = 0;
       }
     });
+
+    if (mode === 'exam') {
+      setTotalScore(computedScore);
+      setMaxStreak(computedMaxStreak);
+    }
 
     recordDeckAttempt(deck.id, correct, deck.questions.length, mode);
     invokeTrimMemory(); // Flush working set after quiz
@@ -159,6 +273,10 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
     setMode(newMode);
     setCurrentIndex(0);
     setAnswers({});
+    setStreak(0);
+    setMaxStreak(0);
+    setTotalScore(0);
+    setRecentReward(null);
     setIsSubmitted(false);
     setElapsedSeconds(0);
     setTimeRemaining(deck.questions.length * 90);
@@ -168,6 +286,8 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
     if (missedIndices.length > 0) {
       setCurrentIndex(missedIndices[0]);
       setIsSubmitted(false);
+      setStreak(0);
+      setRecentReward(null);
       // Retain correct answers, clear missed answers
       setAnswers((prev) => {
         const next = { ...prev };
@@ -186,6 +306,8 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
         answers={answers}
         elapsedSeconds={elapsedSeconds}
         mode={mode}
+        totalScore={totalScore}
+        maxStreak={maxStreak}
         onRetakeQuiz={handleRetakeQuiz}
         onRetakeMissedOnly={handleRetakeMissedOnly}
         onBackToLibrary={onExitQuiz}
@@ -195,6 +317,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
 
   const answeredCount = Object.values(answers).filter((a) => a.selectedOption !== null).length;
   const progressPercent = Math.round((answeredCount / deck.questions.length) * 100);
+  const streakConfig = getStreakBadgeConfig(streak);
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -206,11 +329,11 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
     <div className="max-w-6xl mx-auto space-y-6 pb-12">
       {/* Top HUD Controls Bar */}
       <div className="bg-[#121215] border border-[#27272A] p-4 flex items-center justify-between gap-4">
-        {/* Left: Exit & Mode info */}
+        {/* Left: Exit, Title & Mode info */}
         <div className="flex items-center gap-3">
           <button
             onClick={handleExitClick}
-            className="p-2 bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-zinc-400 hover:text-zinc-200 transition-colors"
+            className="p-2 bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-zinc-400 hover:text-zinc-200 transition-colors snappy-press"
             title="Exit to Library"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -235,23 +358,70 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
           </div>
         </div>
 
-        {/* Center: Exam Countdown Timer or Elapsed */}
-        <div className="flex items-center gap-2 font-mono">
-          <Clock className={`w-4 h-4 ${timeRemaining < 120 && mode === 'exam' ? 'text-red-500 animate-pulse' : 'text-[#10B981]'}`} />
-          <span
-            className={`text-sm font-bold ${
-              timeRemaining < 120 && mode === 'exam' ? 'text-red-500 font-extrabold' : 'text-zinc-200'
-            }`}
-          >
-            {mode === 'exam' ? formatTimer(timeRemaining) : formatTimer(elapsedSeconds)}
-          </span>
+        {/* Center: Reward & Timer Metrics */}
+        <div className="flex items-center gap-3">
+          {/* Live Score Counter */}
+          {mode === 'practice' && (
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-[#18181B] border border-[#27272A] font-mono text-xs text-zinc-200">
+              <Sparkles className="w-3.5 h-3.5 text-[#10B981]" />
+              <span className="font-bold text-[#10B981]">{totalScore}</span>
+              <span className="text-[10px] text-zinc-500">PTS</span>
+            </div>
+          )}
+
+          {/* Dynamic Streak Badge */}
+          {mode === 'practice' && streak > 0 && (
+            <div
+              className={`flex items-center gap-1.5 px-2.5 py-1 border font-mono text-xs animate-reward-bounce ${streakConfig.borderClass} ${streakConfig.bgClass} ${streakConfig.colorClass}`}
+            >
+              <Flame className="w-3.5 h-3.5 animate-streak-fire" />
+              <span className="font-bold">{streak}x</span>
+              <span className="hidden md:inline text-[10px] opacity-80 uppercase">
+                {streakConfig.label}
+              </span>
+            </div>
+          )}
+
+          {/* Exam Countdown Timer or Elapsed */}
+          <div className="flex items-center gap-2 font-mono bg-[#18181B] border border-[#27272A] px-2.5 py-1">
+            <Clock
+              className={`w-3.5 h-3.5 ${
+                timeRemaining < 120 && mode === 'exam'
+                  ? 'text-red-500 animate-pulse'
+                  : 'text-[#10B981]'
+              }`}
+            />
+            <span
+              className={`text-xs font-bold ${
+                timeRemaining < 120 && mode === 'exam'
+                  ? 'text-red-500 font-extrabold'
+                  : 'text-zinc-200'
+              }`}
+            >
+              {mode === 'exam' ? formatTimer(timeRemaining) : formatTimer(elapsedSeconds)}
+            </span>
+          </div>
         </div>
 
-        {/* Right: Submit Button */}
+        {/* Right: Sound & Submit Controls */}
         <div className="flex items-center gap-2">
+          {/* Sound Mute Toggle Button */}
+          <button
+            onClick={handleToggleSound}
+            className="p-2 bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-zinc-400 hover:text-zinc-200 transition-colors snappy-press"
+            title={isMuted ? 'Unmute sound effects (M)' : 'Mute sound effects (M)'}
+          >
+            {isMuted ? (
+              <VolumeX className="w-4 h-4 text-zinc-500" />
+            ) : (
+              <Volume2 className="w-4 h-4 text-[#10B981]" />
+            )}
+          </button>
+
+          {/* Submit Button */}
           <button
             onClick={() => setShowSubmitModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors snappy-press"
           >
             <Send className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">FINISH & SUBMIT</span>
@@ -263,7 +433,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
       {/* Progress Line */}
       <div className="w-full h-1 bg-[#18181B] border-y border-[#27272A]">
         <div
-          className="h-full bg-[#10B981] transition-all duration-200"
+          className="h-full bg-[#10B981] transition-all duration-300 ease-out"
           style={{ width: `${((currentIndex + 1) / deck.questions.length) * 100}%` }}
         />
       </div>
@@ -273,13 +443,17 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
         {/* Left 8 Cols: Question Card & Bottom Prev/Next Controls */}
         <div className="lg:col-span-8 space-y-4">
           <QuestionCard
+            key={currentIndex}
             question={deck.questions[currentIndex]}
             questionNumber={currentIndex + 1}
             totalQuestions={deck.questions.length}
             answerRecord={answers[currentIndex]}
             mode={mode}
+            direction={direction}
+            recentReward={recentReward}
             onSelectOption={handleSelectOption}
             onToggleFlag={handleToggleFlag}
+            onNext={currentIndex < deck.questions.length - 1 ? handleNext : undefined}
           />
 
           {/* Navigation Controls Bar */}
@@ -287,7 +461,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
             <button
               onClick={handlePrev}
               disabled={currentIndex === 0}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#18181B] hover:bg-[#27272A] disabled:opacity-40 disabled:hover:bg-[#18181B] text-xs font-semibold font-mono text-zinc-300 border border-[#27272A] transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 bg-[#18181B] hover:bg-[#27272A] disabled:opacity-30 disabled:hover:bg-[#18181B] text-xs font-semibold font-mono text-zinc-300 border border-[#27272A] transition-colors snappy-press"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>PREVIOUS</span>
@@ -295,17 +469,27 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
 
             {/* Keyboard shortcut tips */}
             <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono text-zinc-500">
-              <span>KEYS: <kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">1-4</kbd> / <kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">A-D</kbd></span>
+              <span>
+                <kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">1-4</kbd> SELECT
+              </span>
               <span>•</span>
-              <span><kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">ARROWS</kbd> NAVIGATE</span>
+              <span>
+                <kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">SPACE</kbd> NEXT
+              </span>
               <span>•</span>
-              <span><kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">F</kbd> FLAG</span>
+              <span>
+                <kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">J/K</kbd> ARROWS
+              </span>
+              <span>•</span>
+              <span>
+                <kbd className="px-1 py-0.5 bg-[#18181B] border border-[#27272A] text-zinc-400">M</kbd> MUTE
+              </span>
             </div>
 
             {currentIndex === deck.questions.length - 1 ? (
               <button
                 onClick={() => setShowSubmitModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors snappy-press"
               >
                 <span>SUBMIT EXAM</span>
                 <Send className="w-4 h-4" />
@@ -313,7 +497,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
             ) : (
               <button
                 onClick={handleNext}
-                className="flex items-center gap-1.5 px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors snappy-press"
               >
                 <span>NEXT</span>
                 <ArrowRight className="w-4 h-4" />
@@ -329,7 +513,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
             currentIndex={currentIndex}
             answers={answers}
             mode={mode}
-            onJumpToQuestion={setCurrentIndex}
+            onJumpToQuestion={handleJumpToQuestion}
           />
         </div>
       </div>
@@ -372,13 +556,13 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowSubmitModal(false)}
-                className="px-4 py-2 bg-[#18181B] hover:bg-[#27272A] text-xs font-semibold font-mono text-zinc-300 border border-[#27272A] transition-colors"
+                className="px-4 py-2 bg-[#18181B] hover:bg-[#27272A] text-xs font-semibold font-mono text-zinc-300 border border-[#27272A] transition-colors snappy-press"
               >
                 Keep Reviewing
               </button>
               <button
                 onClick={handleSubmitQuiz}
-                className="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors"
+                className="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-[#09090B] text-xs font-semibold font-mono transition-colors snappy-press"
               >
                 Yes, Submit Now
               </button>
@@ -403,7 +587,9 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
           <div className="space-y-1">
             <div className="flex justify-between">
               <span className="text-zinc-500">Answered:</span>
-              <span className="text-[#10B981] font-bold">{Object.keys(answers).length} / {deck.questions.length}</span>
+              <span className="text-[#10B981] font-bold">
+                {Object.keys(answers).length} / {deck.questions.length}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-zinc-500">Time Elapsed:</span>
