@@ -41,8 +41,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside className="w-56 sm:w-60 h-[calc(100vh-2.5rem)] bg-[#0C0C0E] border-r border-[#27272A] flex flex-col justify-between select-none flex-shrink-0">
       {/* Top Section: Workspace Tabs */}
       <div className="p-3 space-y-4">
+        {/* App Branding Tile with New Icon */}
+        <div className="flex items-center gap-2.5 px-1 py-1 border-b border-[#27272A]/80 pb-3">
+          <img
+            src="/app-icon.png"
+            alt="Synapse MCQ Studio"
+            className="w-7 h-7 object-contain border border-[#27272A] flex-shrink-0"
+          />
+          <div className="leading-tight">
+            <div className="text-xs font-bold font-mono tracking-wider text-white">SYNAPSE</div>
+            <div className="text-[10px] font-mono text-[#10B981] tracking-wide">MCQ STUDIO</div>
+          </div>
+        </div>
+
         {/* Navigation Category Label */}
-        <div className="px-2 pt-1 text-[10px] font-mono tracking-widest text-zinc-500 uppercase flex items-center justify-between">
+        <div className="px-2 pt-0.5 text-[10px] font-mono tracking-widest text-zinc-500 uppercase flex items-center justify-between">
           <span>WORKSPACE</span>
           <span className="text-[9px] text-[#10B981] font-bold">LOCAL</span>
         </div>

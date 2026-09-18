@@ -465,13 +465,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* ABOUT TAB */}
             {activeTab === 'about' && (
               <div className="space-y-4">
-                <div>
-                  <h3 className="text-xs font-mono font-semibold uppercase text-[#10B981] tracking-wider mb-1">
-                    Synapse MCQ Studio
-                  </h3>
-                  <p className="text-[11px] text-zinc-400">
-                    Ultra-Low-RAM Desktop Platform for AI-Powered PDF MCQ Testing & Learning.
-                  </p>
+                <div className="flex items-center gap-3.5 pb-2 border-b border-[#27272A]/70">
+                  <img
+                    src="/app-icon.png"
+                    alt="Synapse Icon"
+                    className="w-12 h-12 object-contain border border-[#27272A] shadow-lg flex-shrink-0"
+                  />
+                  <div>
+                    <h3 className="text-xs font-mono font-bold uppercase text-[#10B981] tracking-wider">
+                      Synapse MCQ Studio
+                    </h3>
+                    <p className="text-[11px] text-zinc-400">
+                      Ultra-Low-RAM Desktop Platform for AI-Powered PDF MCQ Testing & Learning.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="p-3 bg-[#121215] border border-[#27272A] space-y-2 text-xs font-mono">
