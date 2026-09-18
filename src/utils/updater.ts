@@ -60,27 +60,27 @@ export function compareSemver(v1: string, v2: string): number {
 }
 
 /**
- * Automatically picks the best Windows installer binary from release assets.
+ * Automatically picks the best Windows package from release assets.
  * Prioritizes:
- * 1. .msi (clean installer)
- * 2. .exe (portable or setup installer)
- * 3. .zip (portable archive)
+ * 1. .zip (portable standalone binary package - best for direct atomic executable swap without installers)
+ * 2. .exe (standalone executable or silent installer)
+ * 3. .msi (clean installer)
  */
 export function pickBestWindowsAsset(assets: any[]): ReleaseAsset | null {
   if (!Array.isArray(assets) || assets.length === 0) return null;
 
-  // 1. MSI installer
-  const msi = assets.find((a: any) => typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.msi'));
-  if (msi) {
+  // 1. ZIP portable package (preferred for direct atomic self-replace)
+  const zip = assets.find((a: any) => typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.zip'));
+  if (zip) {
     return {
-      name: msi.name,
-      browser_download_url: msi.browser_download_url,
-      size: msi.size,
-      content_type: msi.content_type,
+      name: zip.name,
+      browser_download_url: zip.browser_download_url,
+      size: zip.size,
+      content_type: zip.content_type,
     };
   }
 
-  // 2. EXE installer
+  // 2. EXE standalone or installer
   const exe = assets.find((a: any) => typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.exe'));
   if (exe) {
     return {
@@ -91,14 +91,14 @@ export function pickBestWindowsAsset(assets: any[]): ReleaseAsset | null {
     };
   }
 
-  // 3. ZIP package
-  const zip = assets.find((a: any) => typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.zip'));
-  if (zip) {
+  // 3. MSI package
+  const msi = assets.find((a: any) => typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.msi'));
+  if (msi) {
     return {
-      name: zip.name,
-      browser_download_url: zip.browser_download_url,
-      size: zip.size,
-      content_type: zip.content_type,
+      name: msi.name,
+      browser_download_url: msi.browser_download_url,
+      size: msi.size,
+      content_type: msi.content_type,
     };
   }
 
@@ -175,9 +175,115 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
   }
 }
 
+export interface SelfUpdateProgress {
+  downloaded: number;
+  total: number;
+  percentage: number;
+  stage: 'downloading' | 'replacing' | 'relaunching' | 'completed';
+}
+
 /**
- * Downloads and launches the selected update binary on Windows, falling back to browser download if needed.
+ * Downloads the update chunk-by-chunk with in-app progress, swaps the binary on disk,
+ * and relaunches seamlessly without any external installer wizard or UAC dialog.
+ */
+export async function performSelfUpdate(
+  asset: ReleaseAsset,
+  onProgress?: (progress: SelfUpdateProgress) => void
+): Promise<boolean> {
+  const notify = (p: SelfUpdateProgress) => {
+    if (onProgress) onProgress(p);
+  };
+
+  // Step 1: Try official @tauri-apps/plugin-updater if available
+  try {
+    const { check } = await import('@tauri-apps/plugin-updater');
+    const { relaunch } = await import('@tauri-apps/plugin-process');
+    const update = await check();
+    if (update?.available) {
+      let downloaded = 0;
+      let contentLength = 0;
+      await update.downloadAndInstall((event) => {
+        switch (event.event) {
+          case 'Started':
+            contentLength = event.data.contentLength || 0;
+            notify({
+              downloaded: 0,
+              total: contentLength,
+              percentage: 0,
+              stage: 'downloading',
+            });
+            break;
+          case 'Progress':
+            downloaded += event.data.chunkLength;
+            const pct = contentLength > 0 ? (downloaded / contentLength) * 100 : 0;
+            notify({
+              downloaded,
+              total: contentLength,
+              percentage: pct,
+              stage: 'downloading',
+            });
+            break;
+          case 'Finished':
+            notify({
+              downloaded: contentLength,
+              total: contentLength,
+              percentage: 100,
+              stage: 'replacing',
+            });
+            break;
+        }
+      });
+
+      notify({
+        downloaded,
+        total: contentLength,
+        percentage: 100,
+        stage: 'relaunching',
+      });
+      await relaunch();
+      return true;
+    }
+  } catch (pluginErr) {
+    console.warn('Tauri updater plugin check/download skipped, using native chunked self-replacer:', pluginErr);
+  }
+
+  // Step 2: Native chunked streaming & atomic disk replacement engine
+  const { invokeDownloadAndSelfReplace, listenUpdateDownloadProgress } = await import('./tauriBridge');
+  let unlisten: (() => void) | null = null;
+  try {
+    unlisten = await listenUpdateDownloadProgress((p) => {
+      const stage = p.percentage >= 99.5 ? 'replacing' : 'downloading';
+      notify({
+        downloaded: p.downloaded_bytes,
+        total: p.total_bytes,
+        percentage: p.percentage,
+        stage,
+      });
+    });
+
+    notify({
+      downloaded: 0,
+      total: asset.size || 0,
+      percentage: 0,
+      stage: 'downloading',
+    });
+
+    const success = await invokeDownloadAndSelfReplace(asset.browser_download_url, asset.name);
+    notify({
+      downloaded: asset.size || 0,
+      total: asset.size || 0,
+      percentage: 100,
+      stage: 'relaunching',
+    });
+    return success;
+  } finally {
+    if (unlisten) unlisten();
+  }
+}
+
+/**
+ * Backwards-compatible wrapper that invokes the native self-update engine.
  */
 export async function executeAppUpdate(asset: ReleaseAsset): Promise<boolean> {
-  return await invokeInstallGitHubUpdate(asset.browser_download_url, asset.name);
+  return await performSelfUpdate(asset);
 }

@@ -392,9 +392,144 @@ fn install_github_update(download_url: String, filename: String) -> Result<bool,
     }
 }
 
+#[derive(Clone, Serialize, Deserialize)]
+pub struct UpdateDownloadProgress {
+    pub downloaded_bytes: u64,
+    pub total_bytes: u64,
+    pub percentage: f64,
+}
+
+#[tauri::command]
+async fn download_and_self_replace(
+    app: tauri::AppHandle,
+    download_url: String,
+    filename: String,
+) -> Result<bool, String> {
+    use std::io::Write;
+    use tauri::Emitter;
+    use futures_util::StreamExt;
+
+    let client = reqwest::Client::builder()
+        .user_agent("Synapse-MCQ-Studio-Updater")
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let response = client
+        .get(&download_url)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to connect to download source: {}", e))?;
+
+    let total_size = response.content_length().unwrap_or(0);
+    let mut stream = response.bytes_stream();
+    let temp_dir = std::env::temp_dir();
+    let temp_download_path = temp_dir.join(format!(
+        "synapse_update_{}_{}",
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs(),
+        filename
+    ));
+
+    let mut file = std::fs::File::create(&temp_download_path)
+        .map_err(|e| format!("Failed to create temporary file: {}", e))?;
+
+    let mut downloaded: u64 = 0;
+
+    while let Some(chunk_result) = stream.next().await {
+        let chunk = chunk_result.map_err(|e| format!("Error reading chunk: {}", e))?;
+        file.write_all(&chunk)
+            .map_err(|e| format!("Error writing chunk to file: {}", e))?;
+        downloaded += chunk.len() as u64;
+
+        let percentage = if total_size > 0 {
+            (downloaded as f64 / total_size as f64) * 100.0
+        } else {
+            0.0
+        };
+
+        let _ = app.emit(
+            "updater-download-progress",
+            UpdateDownloadProgress {
+                downloaded_bytes: downloaded,
+                total_bytes: total_size,
+                percentage,
+            },
+        );
+    }
+
+    file.flush().map_err(|e| e.to_string())?;
+    drop(file);
+
+    #[cfg(target_os = "windows")]
+    {
+        // If file is zip, extract executable
+        let final_exe_path = if filename.to_lowercase().ends_with(".zip") {
+            let zip_file = std::fs::File::open(&temp_download_path).map_err(|e| e.to_string())?;
+            let mut archive = zip::ZipArchive::new(zip_file).map_err(|e| e.to_string())?;
+            let extracted_exe = temp_dir.join(format!(
+                "synapse_extracted_{}.exe",
+                std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs()
+            ));
+            let mut found = false;
+            for i in 0..archive.len() {
+                let mut f = archive.by_index(i).map_err(|e| e.to_string())?;
+                if f.name().to_lowercase().ends_with(".exe") {
+                    let mut out = std::fs::File::create(&extracted_exe).map_err(|e| e.to_string())?;
+                    std::io::copy(&mut f, &mut out).map_err(|e| e.to_string())?;
+                    found = true;
+                    break;
+                }
+            }
+            if !found {
+                return Err("Could not find executable inside zip archive".to_string());
+            }
+            extracted_exe
+        } else {
+            temp_download_path
+        };
+
+        let current_exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        let backup_exe = current_exe.with_extension("exe.old");
+
+        // Attempt direct atomic executable swap on disk
+        let direct_swap = (|| -> Result<(), std::io::Error> {
+            let _ = std::fs::remove_file(&backup_exe);
+            std::fs::rename(&current_exe, &backup_exe)?;
+            std::fs::copy(&final_exe_path, &current_exe)?;
+            Ok(())
+        })();
+
+        if direct_swap.is_ok() {
+            // Direct swap completed: spawn new process and exit cleanly
+            let _ = std::process::Command::new(&current_exe).spawn();
+            std::process::exit(0);
+        } else {
+            // If direct file replacement failed (e.g. Program Files path requiring silent installer),
+            // run silent installer without UAC wizards
+            if final_exe_path.to_string_lossy().ends_with(".msi") {
+                let _ = std::process::Command::new("msiexec")
+                    .args(&["/i", &final_exe_path.to_string_lossy(), "/qn", "/norestart"])
+                    .spawn();
+            } else {
+                let _ = std::process::Command::new(&final_exe_path)
+                    .args(&["/SILENT", "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"])
+                    .spawn();
+            }
+            std::thread::sleep(std::time::Duration::from_millis(1500));
+            std::process::exit(0);
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        Ok(true)
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -417,7 +552,8 @@ pub fn run() {
             save_persistent_decks,
             load_persistent_settings,
             save_persistent_settings,
-            install_github_update
+            install_github_update,
+            download_and_self_replace
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

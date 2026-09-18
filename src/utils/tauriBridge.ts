@@ -364,3 +364,45 @@ export async function invokeInstallGitHubUpdate(downloadUrl: string, filename: s
     throw err;
   }
 }
+
+export interface UpdateProgressPayload {
+  downloaded_bytes: number;
+  total_bytes: number;
+  percentage: number;
+}
+
+export async function listenUpdateDownloadProgress(
+  callback: (payload: UpdateProgressPayload) => void
+): Promise<() => void> {
+  if (!isTauriEnvironment()) return () => {};
+  try {
+    const { listen } = await import('@tauri-apps/api/event');
+    const unlisten = await listen<UpdateProgressPayload>('updater-download-progress', (event) => {
+      callback(event.payload);
+    });
+    return unlisten;
+  } catch (err) {
+    console.warn('Failed to attach updater-download-progress listener:', err);
+    return () => {};
+  }
+}
+
+export async function invokeDownloadAndSelfReplace(
+  downloadUrl: string,
+  filename: string
+): Promise<boolean> {
+  if (!isTauriEnvironment()) {
+    window.open(downloadUrl, '_blank');
+    return true;
+  }
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return await invoke<boolean>('download_and_self_replace', {
+      downloadUrl,
+      filename,
+    });
+  } catch (err) {
+    console.error('Failed to invoke download_and_self_replace:', err);
+    throw err;
+  }
+}

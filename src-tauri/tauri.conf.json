@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Synapse MCQ Studio",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "identifier": "com.synapse.mcq",
   "build": {
     "frontendDist": "../dist",
@@ -37,5 +37,12 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/manuja-me/synapse-mcq-desktop/releases/latest/download/latest.json"
+      ]
+    }
   }
 }
